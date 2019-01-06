@@ -1,0 +1,11 @@
+fun hello(bonzour, salut){
+    int michel = 64;
+    str zebulon = "Et la vie va \"Non ?\"";
+    bool josh = Yep;
+    42 mouais = 42;
+    print("Zapue");
+}
+
+fun test(){
+    hello();
+}

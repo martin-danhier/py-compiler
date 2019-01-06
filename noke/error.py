@@ -12,6 +12,3 @@ class Error:
         print("NoKe compiler has encountered an error. (︶︿︶)")
         print(self.message)
         input("Press Ctrl+C to stop enter to continue. But from now on, praying is recommended.")
-
-error = Error(3)
-error.launch()

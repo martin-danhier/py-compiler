@@ -17,7 +17,7 @@ class Token:
         self.value = value
 
     def __repr__(self):
-        return ("Token(nature = \"%s\", value = \"%s\")" % (self.nature, self.value))
+        return "Token(nature = \"%s\", value = \"%s\")" % (self.nature, self.value)
 
 def tokenize(string : str, grammar_file : str = "grammar_rules.json", log : bool = False ):
     """ Tokenizes the given string using the given grammar file's regex grouping rules.
@@ -44,7 +44,7 @@ def tokenize(string : str, grammar_file : str = "grammar_rules.json", log : bool
         if (match.lastgroup == "MISMATCH"): #error
             if log:
                 print('%d - Syntax Error' % match.pos)
-            break #will be a raise don't kill me please
+            break #will be a raise don't kill me please (kill him ! kill him !)
         elif (match.lastgroup != "SKIP"):
             if log:
                 print('%s : %s' % (match.group(), match.lastgroup))
@@ -58,5 +58,4 @@ float test2 = .54f;
 print ("My name is Jack");
 """
 print(tokenize(expr,log=True))
-
 
