@@ -1,6 +1,7 @@
 {
     "STRING_LITERAL": "\\\"(?:[^\\\"]?|\\\\\\\")+[^\\\\]\\\"|\\\"\\\"",
     "CHAR_LITERAL": "'(?:[^'\\\\]|\\\\'|\\\\\\\\)'",
+    "COMMENT" : "#(?:[^\n]+)?\n",
     "TYPE": "\\b(?:int|bool|float|double|str|byte|char|42)\\b",
     "IDENTIFIER": "\\b[a-zA-Z_]\\w*\\b",
     "INT_DEC_LITERAL": "[0-9]+\\b",

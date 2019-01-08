@@ -1,0 +1,6 @@
+{
+    "COMMENT" : "#(?:[^\\n]+)?\\n",
+    "MODULE" : "(?:[ \\t]+)?(?:(?P<DISABLED>disabled)(?:\\s+))?(?P<TYPE>\\b(?:fun|class|module|disable)\\b)(?:\\s+)(?:(?P<RETURN_VALUE_A>\\b(?:[a-zA-Z_]\\w*)\\b)(?:\\s+))?(?P<IDENTIFIER>\\b[a-zA-Z_]\\w*\\b)(?:\\s+)?(?:(?:\\((?P<PARAMETERS>[^\\(\\)]+)?\\))(?:\\s+)?)?(?::(?:\\s+)?(?P<RETURN_VALUE_B>\\b(?:[a-zA-Z_]\\w*)\\b)(?:\\s+)?)?(?:{(?P<BODY>(?:(?:(?:\\\"(?:[^\\\"]?|\\\\\\\")+[^\\\\]\\\"|\\\"\\\")|[^{}]|(?:{(?&BODY)}))+)?)})",
+    "SKIP" : "\\s+",
+    "MISMATCH" : ".+"
+}

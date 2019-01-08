@@ -1,4 +1,4 @@
-fun main(){
+fun main(test : int){
     var michel : number;
     michel = 3;
     var jean : number;
@@ -7,6 +7,6 @@ fun main(){
     mouais(michel, jean);
 }
 
-fun main(){
+disabled fun main23(){
     hello();
 }

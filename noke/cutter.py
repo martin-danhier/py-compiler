@@ -1,31 +1,60 @@
 from noke import error
 from noke import nobject
+import regex as re
+import json
+
+#### DISCLAIMER ####
+# This file will be modified.
+# It currently hosts the first cutter (module cutter), but module cutter and basic cutter will be merged in the __init__s of NObjects
+# This class will then only instanciate the first NObject (file) and run it.
 
 
 class Cutter:
+    # All NoKeObkect's of the program
+    noked_objects : list
+
     def __init__(self, file: str):
-        source = ""  # Empty input text for the moment
+        #get the text from the file
+        source = ""
         try:
-            source = open(file, 'r').read()  # Open and read the file
+            # Open and read the file
+            source = open(file, 'r').read()
         except:
-            err = error.Error(3)  # Unable to open file -> 3
-            err.launch()  # Launch the error
-        self.noke_obj = []  # All NoKeObject of the program
-        objs = source.split("\n\n")  # Separate each module
-        for obj in objs:
-            # Make all module one-line
-            obj = obj.replace("\n", "").replace("\t", "").replace(
-                "    ", "").replace("        ", "")
+            # Unable to open file -> 3
+            err = error.Error(3)
+            err.launch()
+
+        #get the regex
+        with open('data/cutter_rules.json', 'r') as json_file:
+            rules = json.load(json_file)
+        full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
+        for match in re.finditer(full_regex,source):
+            if match.lastgroup == "MISMATCH":
+                # Regex failed to match -> 1 
+                # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
+                err = error.Error(1)
+                err.launch()
+                break
+            elif match.lastgroup not in ["SKIP", "COMMENT"] and match.group("DISABLED") == None: #skip those
+                pass
+
+
+        #objs = source.split("\n\n")  # Separate each module ahaha no
+        #for obj in objs:
+            # Make all modules one-line
+         #   obj = obj.replace("\n", "").replace("\t", "").replace(
+          #      "    ", "").replace("        ", "")
             # Create a NoKeObj with this text and add it to the list
-            self.noke_obj.append(nobject.NObject(obj))
+           # self.noked_objects.append(nobject.NObject(obj))
 
     def run(self):
         # Simply run the program, find the 'main NoKeObject and run it
         not_found = True
         i = 0
         # Loop through discovered obj
-        while not_found and i != len(self.noke_obj):
-            if self.noke_obj[i].name == 'main' and self.noke_obj[i].type == nobject.TypeObject.FUN:
-                self.noke_obj[i].run(nobject.TypeRun.VM)
+        while not_found and i != len(self.noked_objects):
+            if self.noked_objects[i].name == 'main' and self.noked_objects[i].type == nobject.NObjectNature.FUN:
+                self.noked_objects[i].run(nobject.NObjectRun.VM)
                 not_found = False
             i += 1
+

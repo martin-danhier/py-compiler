@@ -1,4 +1,4 @@
-import re
+import regex as re
 import json
 
 class Token:
@@ -19,7 +19,7 @@ class Token:
     def __repr__(self):
         return "Token(nature = \"%s\", value = \"%s\")" % (self.nature, self.value)
 
-def tokenize(string : str, grammar_file : str = "grammar_rules.json", log : bool = False ):
+def tokenize(string : str, grammar_file : str = "data/grammar_rules.json", log : bool = False ):
     """ Tokenizes the given string using the given grammar file's regex grouping rules.
 
     Parameters
@@ -45,7 +45,7 @@ def tokenize(string : str, grammar_file : str = "grammar_rules.json", log : bool
             if log:
                 print('%d - Syntax Error' % match.pos)
             break #will be a raise don't kill me please (kill him ! kill him !)
-        elif (match.lastgroup != "SKIP"):
+        elif (match.lastgroup not in ["SKIP", "COMMENT"]):
             if log:
                 print('%s : %s' % (match.group(), match.lastgroup))
             token_list.append(Token(match.lastgroup,match.group()))
