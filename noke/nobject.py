@@ -28,19 +28,30 @@ class NObjectRun(Enum):
 
 class NObject:
     """ The base class. """
+    parent : object
+    children : list
 
-    nature: NObjectNature
-    children: list
 
-    def __init__(self, nature: NObjectNature, body: str):
+    def __init__(self, body: str, parent = None):
         """ Create a NObject. 
         Parameters
         ----------
         nature : the type of the NObject (NObjectNature)
-        body : the body of the NObject (str)"""
-        self.nature = nature
+        body : the body of the NObject (str)
+        parent : the NObject of which this one is the children. Leave it to None."""
+        self.parent = parent
         # process body
 
+    def get_stack_trace(self):
+        """ Get a stacktrace from this NObject. 
+        Returns
+        -------
+        stack_trace : a str that countains many infos to find this NObject again in the code"""
+
+        stack_trace = '\nin File: "%s" in %s. Details TODO' % ('<file. TODO>', self.__class__.__name__)
+        if self.parent != None:
+            stack_trace += self.parent.get_stack_trace()
+        return stack_trace
 
 class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.

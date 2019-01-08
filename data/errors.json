@@ -20,7 +20,7 @@
         },
         "4": {
             "type" : "syntax_error",
-            "content" : "Syntax while trying to compile source code."
+            "content" : "Syntax error while trying to compile source code."
         }
     }
 }

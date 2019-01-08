@@ -24,6 +24,6 @@ class Error:
     def launch(self):
         print("NoKe compiler has encountered an error. (︶︿︶)")
         print(self.message)
-        input("Press Ctrl+C to stop enter to continue. But from now on, praying is recommended.")
+        input("Press Ctrl+C to stop, press Enter to continue. But from now on, praying is recommended.\n")
 
 Error(4, 3, 12,"test.idk").launch()
