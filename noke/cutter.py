@@ -11,10 +11,10 @@ import json
 
 class Cutter:
     # All NoKeObkect's of the program
-    noked_objects : list
+    noked_objects: list
 
     def __init__(self, file: str):
-        #get the text from the file
+        # get the text from the file
         source = ""
         try:
             # Open and read the file
@@ -24,23 +24,24 @@ class Cutter:
             err = error.Error(3)
             err.launch()
 
-        #get the regex
+        # get the regex
         with open('data/cutter_rules.json', 'r') as json_file:
             rules = json.load(json_file)
-        full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
-        for match in re.finditer(full_regex,source):
+        full_regex = "|".join("(?P<%s>%s)" % (
+            rule, rules[rule]) for rule in rules)
+        for match in re.finditer(full_regex, source):
             if match.lastgroup == "MISMATCH":
-                # Regex failed to match -> 1 
+                # Regex failed to match -> 1
                 # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
                 err = error.Error(1)
                 err.launch()
                 break
-            elif match.lastgroup not in ["SKIP", "COMMENT"] and match.group("DISABLED") == None: #skip those
+            # skip those
+            elif match.lastgroup not in ["SKIP", "COMMENT"] and match.group("DISABLED") == None:
                 pass
 
-
-        #objs = source.split("\n\n")  # Separate each module ahaha no
-        #for obj in objs:
+        # objs = source.split("\n\n")  # Separate each module ahaha no
+        # for obj in objs:
             # Make all modules one-line
          #   obj = obj.replace("\n", "").replace("\t", "").replace(
           #      "    ", "").replace("        ", "")
@@ -57,4 +58,3 @@ class Cutter:
                 self.noked_objects[i].run(nobject.NObjectRun.VM)
                 not_found = False
             i += 1
-

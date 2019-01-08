@@ -18,85 +18,89 @@ class NObjectNature(Enum):
     CALL = 11
     OPERATION = 12
     INSTANCIATION = 13
-    
+
 
 class NObjectRun(Enum):
     # Type of run
     ASS = 1  # Compile to binary
     VM = 2  # Compile it to VMed
 
+
 class NObject:
     """ The base class. """
 
-    nature : NObjectNature
-    children : list
-    
-    def __init__(self, nature : NObjectNature, body : str):
+    nature: NObjectNature
+    children: list
+
+    def __init__(self, nature: NObjectNature, body: str):
         """ Create a NObject. 
         Parameters
         ----------
         nature : the type of the NObject (NObjectNature)
         body : the body of the NObject (str)"""
         self.nature = nature
-        #process body
+        # process body
+
 
 class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.
     => init must check that children are exclusively modules"""
-    identifier : str #the name of the module
-    def __init__(self, nature : NObjectNature, body : str, identifier : str):
+    identifier: str  # the name of the module
+
+    def __init__(self, nature: NObjectNature, body: str, identifier: str):
         NObject.__init__(self, nature, body)
         self.identifier = identifier
+
 
 class Fun(Module):
     """A function is... a function.
     => init must analyse the parameters
     """
-    return_type : str
-    parameters : list
+    return_type: str
+    parameters: list
 
-    def __init__(self, nature : NObjectNature, body : str, identifier : str, parameters : str, return_type : str) :
-        Module.__init__(self,nature,body,identifier)
+    def __init__(self, nature: NObjectNature, body: str, identifier: str, parameters: str, return_type: str):
+        Module.__init__(self, nature, body, identifier)
         self.return_type = return_type
-        #process parameters
-        
+        # process parameters
+
 
 class Class(Module):
-    #todo
+    # todo
     pass
+
 
 class Condition(NObject):
     """ ex:"if (x > 2) { thing } else {}" is a Conditional instruction
         it has the particulary to have 2 children : if and else (else ifs are just ifs in the else of another if)
         if there is no else statement, else_condition and else_children are None and are skipped when the condition is false
        """
-    condition : list #to revise
-    else_condition : list #to revise too
-    else_children : []
+    condition: list  # to revise
+    else_condition: list  # to revise too
+    else_children: []
+
 
 class Loop(NObject):
-    #to think then do
+    # to think then do
     pass
+
 
 class Instruction(NObject):
     """ex: "int a = 2" is an instruction of type "assignement".
     the left part (int a) is an instruction of type "instanciation".
     the right part (2) is also an instanciation."""
-    instruction_type : object #maybe create an enum with the type ? Or use NObjectNature ?
+    instruction_type: object  # maybe create an enum with the type ? Or use NObjectNature ?
     pass
 
 
+# WORK IN PROGRESS
 
 
-
-#WORK IN PROGRESS
-
-
-#class NObject:
+# class NObject:
 #    children : list
 #    name : str
 #    type : TypeObject
-#    
+#
 #    def __init__(self, content: str):
 #        self.children = []  # Another object like this, lines of a function for example
 #        self.name = ""  # hello
