@@ -36,11 +36,11 @@ class NObject:
         """ Create a NObject. 
         Parameters
         ----------
-        nature : the type of the NObject (NObjectNature)
         body : the body of the NObject (str)
-        parent : the NObject of which this one is the children. Leave it to None."""
+        parent : the NObject of which this one is the children. Leave it to None !"""
         self.parent = parent
         # process body
+
 
     def get_stack_trace(self):
         """ Get a stacktrace from this NObject. 
@@ -77,7 +77,7 @@ class Fun(Module):
 
 
 class Class(Module):
-    # todo
+    # TODO
     pass
 
 
