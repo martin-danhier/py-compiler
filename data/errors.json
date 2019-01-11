@@ -21,6 +21,10 @@
         "4": {
             "type" : "syntax_error",
             "content" : "Syntax error while trying to compile source code."
+        },
+        "5": {
+            "type" : "bad_input",
+            "content" : "The given file should be a .idk file."
         }
     }
 }

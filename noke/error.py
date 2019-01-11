@@ -22,8 +22,8 @@ class Error:
             self.message += "  " + nchar*" " + "^"
 
     def launch(self):
+        """ Equivalent to a raise. Stops the program and display the error. """
         print("NoKe compiler has encountered an error. (︶︿︶)")
         print(self.message)
-        input("Press Ctrl+C to stop, press Enter to continue. But from now on, praying is recommended.\n")
+        sys.exit() # -> meta break
 
-Error(4, 3, 12,"test.idk").launch()

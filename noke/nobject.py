@@ -25,14 +25,28 @@ class NObjectRun(Enum):
     ASS = 1  # Compile to binary
     VM = 2  # Compile it to VMed
 
+class NObjectPosition:
+    """ Represents the position of a NObject in the source code. Used for debugging and error localisation."""
+    file : str
+    start_line : int
+    start_column : int
+    end_column : int
+    end_line : int
+
+    def __init__(self, file : str, start_line : int, start_column : int, end_line : int, end_column : int):
+        self.file = file
+        self.start_line = start_line
+        self.start_column = start_column
+        self.end_line = end_line
+        self.end_column = end_column
 
 class NObject:
-    """ The base class. """
+    """ The base class. Should never be directly instanciated, instantiate one of its children instead."""
     parent : object
     children : list
+    #position : object
 
-
-    def __init__(self, body: str, parent = None):
+    def __init__(self, parent = None):
         """ Create a NObject. 
         Parameters
         ----------
@@ -58,9 +72,17 @@ class Module(NObject):
     => init must check that children are exclusively modules"""
     identifier: str  # the name of the module
 
-    def __init__(self, nature: NObjectNature, body: str, identifier: str):
-        NObject.__init__(self, nature, body)
+    def __init__(self, body: str, identifier: str, parent = None):
+        """ Instanciates a module. A module is a set of other modules, like funs or classes.
+        Parameters
+        ----------
+        body: the code inside the module's brackets (not included) (str)
+        identifier: the "name" of the module. Should respect naming conventions. (str)
+        parent: the NObject of which this one is the children. Leave it to None !"""
+        NObject.__init__(self, parent)
         self.identifier = identifier
+        #Process body
+        
 
 
 class Fun(Module):
