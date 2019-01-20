@@ -1,5 +1,14 @@
 from enum import Enum
-import re
+import json
+import regex as re
+
+#get the regex and store it (OMFG) globally to avoid recreating it many times.
+with open('data/grammar_rules.json', 'r') as json_file:
+    rules = json.load(json_file)
+full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
+
+del(rules) #delete the rules dictionnary that is not needed anymore
+del(json_file)
 
 
 class NObjectNature(Enum):
@@ -50,7 +59,6 @@ class NObject:
         """ Create a NObject. 
         Parameters
         ----------
-        body : the body of the NObject (str)
         parent : the NObject of which this one is the children. Leave it to None !"""
         self.parent = parent
         # process body

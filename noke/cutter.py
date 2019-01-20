@@ -33,10 +33,7 @@ class Cutter:
         
 
         # get the regex
-        with open('data/grammar_rules.json', 'r') as json_file:
-            rules = json.load(json_file)
-        full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
-        print(full_regex)
+
         #for match in re.finditer(full_regex, source):
         #    if match.lastgroup == "MISMATCH":
         #        # Regex failed to match -> 1
