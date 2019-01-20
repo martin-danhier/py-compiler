@@ -1,11 +1,12 @@
-fun hello(bonzour, salut){
-    int michel = 64;
-    str zebulon = "Et la vie va \"Non ?\"";
-    bool josh = Yep;
-    42 mouais = 42;
-    print("Zapue");
+fun main(test : int){
+    var michel : number;
+    michel = 3;
+    var jean : number;
+    jean = 42;
+    michel = michel * jean;
+    mouais(michel, jean);
 }
 
-fun test(){
+disabled fun main23(){
     hello();
 }

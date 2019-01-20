@@ -1,53 +1,203 @@
 from enum import Enum
-import re
+import json
+import regex as re
+
+#get the regex and store it (OMFG) globally to avoid recreating it many times.
+with open('data/grammar_rules.json', 'r') as json_file:
+    rules = json.load(json_file)
+full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
+
+del(rules) #delete the rules dictionnary that is not needed anymore
+del(json_file)
 
 
-class TypeObject(Enum):
-    FUN = 1
-    CLASS = 2
-    IF = 3
-    MODULE = 4
-    IMPORT = 5
-    VAR = 6
+class NObjectNature(Enum):
+    # Type of NObject. Problem : it is possible to declare a LOOP as a CLASS :/ kind of "dirty" method then
+    FILE = 0
+    MODULE = 1
+    FUN = 2
+    CLASS = 3
+    CONDITION = 4
+    LOOP = 5
+    WHILE_LOOP = 6
+    FOR_LOOP = 7
+    INSTRUCTION = 8
+    IMPORT = 9
+    ASSIGNEMENT = 10
+    CALL = 11
+    OPERATION = 12
+    INSTANCIATION = 13
 
 
-class TypeRun(Enum):
-    ASS = 1
-    RUNTIME = 2
+class NObjectRun(Enum):
+    # Type of run
+    ASS = 1  # Compile to binary
+    VM = 2  # Compile it to VMed
 
+class NObjectPosition:
+    """ Represents the position of a NObject in the source code. Used for debugging and error localisation."""
+    file : str
+    start_line : int
+    start_column : int
+    end_column : int
+    end_line : int
+
+    def __init__(self, file : str, start_line : int, start_column : int, end_line : int, end_column : int):
+        self.file = file
+        self.start_line = start_line
+        self.start_column = start_column
+        self.end_line = end_line
+        self.end_column = end_column
 
 class NObject:
-    def __init__(self, content: str):
-        self.childs = []  # Another object like this, lines of a function for example
-        self.name = ""  # hello
-        self.type = ""  # TypeObject.FUN
-        # Let's parse the input string
-        # Check if it's a fun|class|module string
-        if content.startswith(('fun', 'class', 'module')):
-            # It's a fun|class|module
-            print("Okay, on allume !")
-            # Let's launch the correct regex
-            regex = r'(fun|class|module)(?:\s+?[^\S]*)(.+?[^\(|^\ |^\{]*)(?:[\(|\{])'
-            match = re.findall(regex, content)
-            for test in match:
-                self.name = match[0][1]
-                self.type = match[0][0]
-            if self.type == "fun":
-                # Get core of the module between { and }
-                childs = content[content.find('{')+1:content.find('}')].split(';')
-                childs.pop() # Just remove last element
-                print(childs)
-                for child in childs:
-                    # Each line of code = a child of this NoKeObj
-                    self.childs.append(NObject(child))
-        else:
-            pass
-            # Let's launch michel
-            print('Martin ? à toi de jouer. Tu vas avoir affaire à une ligne du style "', content, ' "')
-            # int michel = 64 par exemple
+    """ The base class. Should never be directly instanciated, instantiate one of its children instead."""
+    parent : object
+    children : list
+    #position : object
 
-    def run(self, type: TypeRun):
-        if type == TypeRun.ASS:
-            pass  # Let's return this object under assembler form
-        elif type == TypeRun.RUNTIME:
-            pass  # Let's just execute this object
+    def __init__(self, parent = None):
+        """ Create a NObject. 
+        Parameters
+        ----------
+        parent : the NObject of which this one is the children. Leave it to None !"""
+        self.parent = parent
+        # process body
+
+
+    def get_stack_trace(self):
+        """ Get a stacktrace from this NObject. 
+        Returns
+        -------
+        stack_trace : a str that countains many infos to find this NObject again in the code"""
+
+        stack_trace = '\nin File: "%s" in %s. Details TODO' % ('<file. TODO>', self.__class__.__name__)
+        if self.parent != None:
+            stack_trace += self.parent.get_stack_trace()
+        return stack_trace
+
+class Module(NObject):
+    """ A module is a set of other modules, like fun or Classes.
+    => init must check that children are exclusively modules"""
+    identifier: str  # the name of the module
+
+    def __init__(self, body: str, identifier: str, parent = None):
+        """ Instanciates a module. A module is a set of other modules, like funs or classes.
+        Parameters
+        ----------
+        body: the code inside the module's brackets (not included) (str)
+        identifier: the "name" of the module. Should respect naming conventions. (str)
+        parent: the NObject of which this one is the children. Leave it to None !"""
+        NObject.__init__(self, parent)
+        self.identifier = identifier
+        #Process body
+        
+
+
+class Fun(Module):
+    """A function is... a function.
+    => init must analyse the parameters
+    """
+    return_type: str
+    parameters: list
+
+    def __init__(self, nature: NObjectNature, body: str, identifier: str, parameters: str, return_type: str):
+        Module.__init__(self, nature, body, identifier)
+        self.return_type = return_type
+        # process parameters
+
+
+class Class(Module):
+    # TODO
+    pass
+
+
+class Condition(NObject):
+    """ ex:"if (x > 2) { thing } else {}" is a Conditional instruction
+        it has the particulary to have 2 children : if and else (else ifs are just ifs in the else of another if)
+        if there is no else statement, else_condition and else_children are None and are skipped when the condition is false
+       """
+    condition: list  # to revise
+    else_condition: list  # to revise too
+    else_children: []
+
+
+class Loop(NObject):
+    # to think then do
+    pass
+
+
+class Instruction(NObject):
+    """ex: "int a = 2" is an instruction of type "assignement".
+    the left part (int a) is an instruction of type "instanciation".
+    the right part (2) is also an instanciation."""
+    instruction_type: object  # maybe create an enum with the type ? Or use NObjectNature ?
+    pass
+
+
+# WORK IN PROGRESS
+
+
+# class NObject:
+#    children : list
+#    name : str
+#    type : TypeObject
+#
+#    def __init__(self, content: str):
+#        self.children = []  # Another object like this, lines of a function for example
+#        self.name = ""  # hello
+#        self.type = ""  # TypeObject.FUN
+#        self.content = ""  # {bla bla}
+#        # Let's parse the input string
+#        # Check if it's a fun|class|module string
+#        if content.startswith(('fun', 'class', 'module')):
+#            # It's a fun|class|module
+#            # Let's launch the regex
+#            regex = r'(fun|class|module)(?:\s+?[^\S]*)(.+?[^\(|^\ |^\{]*)(?:[\(|\{])'
+#            match = re.findall(regex, content)
+#            # Iterate through all found regex group
+#            for test in match:
+#                # If all works, we will receive [('type', 'name')]
+#                self.name = match[0][1]
+#                type_s = match[0][0]
+#                if type_s == 'fun':
+#                    self.type = TypeObject.FUN
+#                elif type_s == 'class':
+#                    self.type = TypeObject.CLASS
+#                elif type_s == 'module':
+#                    self.type = TypeObject.MODULE
+#            if self.type == TypeObject.FUN:
+#                # Get content of the module between { and } and split it
+#                childs = content[content.find(
+#                    '{')+1:content.find('}')].split(';')
+#                childs.pop()  # Just remove last element
+#                for child in childs:
+#                    # Each line of code = a child of this NoKeObj
+#                    self.children.append(NObject(child))
+#            else:
+#                # TODO here will be case where type is different than fun
+#                raise NotImplementedError(
+#                    'You try to use %s. But it\'s an unimplemented feature' % self.type)
+#        elif content.startswith('var'):
+#            # It's the initialization of a variable
+#            regex = r'(?:var)(?:\s+?[^\S]*)(\S+?[^\s]*)(?:\s+?[^\S]*)(?:\:)(?:\s+?\b)(\S+?[^\s]*)'
+#            match = re.findall(regex, content)
+#            self.type = TypeObject.INIT
+#            for test in match:
+#                self.name = test[0]  # jean
+#                self.content = test[1]  # number
+#        else:
+#            self.type = 'TODO'
+#            self.content = content
+#            self.name = 'TODO'
+#
+#    def run(self, type_r: TypeRun):
+#        if type_r == TypeRun.ASS:
+#            pass  # Let's return this object under assembler form
+#        elif type_r == TypeRun.RUNTIME:
+#            pass  # Let's just execute this object
+#        elif type_r == TypeRun.VM:
+#            # Let's return this object under VMed form
+#            # Loop through all children and launch them
+#            print('Running', self.type, self.name)
+#            for child in self.children:
+#                child.run(type_r)

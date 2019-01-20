@@ -1,21 +1,30 @@
 {
-    "types":{
-        "regex_failed" : "Regex failed to match.",
-        "bad_input" : "Unable to work on given input.",
-        "cleaner_error" : "Cleaner failed to do his work."
+    "types": {
+        "regex_failed": "Regex failed to match.",
+        "bad_input": "Unable to work on given input.",
+        "cleaner_error": "Cleaner failed to do his work.",
+        "syntax_error": "Syntax error occured."
     },
-    "number":{
-        "1" : {
-            "type" : "regex_failed",
-            "content" : "In cutter state."
+    "number": {
+        "1": {
+            "type": "regex_failed",
+            "content": "In cutter state."
         },
-        "2" : {
-            "type" : "bad_input",
-            "content" : "Input code is empty."
+        "2": {
+            "type": "bad_input",
+            "content": "Input code is empty."
         },
-        "3" : {
+        "3": {
+            "type": "bad_input",
+            "content": "Unable to open file."
+        },
+        "4": {
+            "type" : "syntax_error",
+            "content" : "Syntax error while trying to compile source code."
+        },
+        "5": {
             "type" : "bad_input",
-            "content" : "Unable to open file."
+            "content" : "The given file should be a .idk file."
         }
     }
 }
