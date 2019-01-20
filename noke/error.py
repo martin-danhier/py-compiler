@@ -3,7 +3,7 @@ import sys
 
 
 class Error:
-    def __init__(self, nb=-1, line=0, nchar=0 , bfile="", stack=[], msg=None):
+    def __init__(self, nb=-1, line=0, nchar=0, bfile="", stack=[], msg=None):
         if not nb == -1:
             self.number = nb
             # Open json relative to errors
@@ -17,7 +17,8 @@ class Error:
                 target_line = ""
                 with open(bfile) as target_file:
                     target_line = target_file.readlines()[line]
-                    target_line = target_line.replace("\t", "").replace("  ", "")
+                    target_line = target_line.replace(
+                        "\t", "").replace("  ", "")
                 self.message += "\nIn file %s on line %d, char %d.\n-> %s" % (
                     bfile, line, nchar, target_line)
                 self.message += "  " + nchar*" " + "^"
@@ -30,6 +31,4 @@ class Error:
         """ Equivalent to a raise. Stops the program and display the error. """
         print("NoKe compiler has encountered an error. (︶︿︶)")
         print(self.message)
-        sys.exit() # -> meta break
-
-Error(1, msg="yo").launch()
+        sys.exit()  # -> meta break
