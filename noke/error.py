@@ -16,7 +16,7 @@ class Error:
               
         self.message = ""
         if (stack != ""):
-            self.message += stack + "\n"
+            self.message += stack
 
         if line != 0 and bfile != "":
                 target_line = ""
@@ -32,8 +32,7 @@ class Error:
         with open("data/errors.json") as json_file:
             error_list = json.load(json_file)
         if (nb != -1):
-            self.message += colored(error_list["types"][error_list["number"][str(
-                nb)]["type"]] + " " + error_list["number"][str(nb)]["content"] + "\n","yellow")
+            self.message += colored(error_list["types"][error_list["number"][str(nb)]["type"]] + " " + error_list["number"][str(nb)]["content"],"yellow")
         elif (type != ""):
             if (type in error_list["types"]):
                 self.message += colored(error_list["types"][type],"yellow") + " "
@@ -50,5 +49,5 @@ class Error:
     def launch(self):
         """ Equivalent to a raise. Stops the program and display the error. """
         print("NoKe compiler has encountered an %s.  (︶︿︶)" % colored("error","red"))
-        print(self.message + "\n")
+        print(self.message)
         sys.exit()  # -> meta break

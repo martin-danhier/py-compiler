@@ -72,10 +72,60 @@ class NObject:
         -------
         stack_trace : a str that countains many infos to find this NObject again in the code"""
 
-        stack_trace = '\nin File: "%s" in %s. Details TODO' % ('<file. TODO>', self.__class__.__name__)
+        stack_trace = '\tin File: "%s" in %s. Details TODO\n' % ('test.idk', self.__class__.__name__)
         if self.parent != None:
             stack_trace += self.parent.get_stack_trace()
         return stack_trace
+    
+    def scan_declaration(self, match):
+        """ Called when a declaration is found in the source code. """
+        #get the type
+        decl_type = ""
+        decl_type_a = match.group("DECL_TYPE_A")
+        decl_type_b = match.group("DECL_TYPE_B")
+        if (decl_type_a != "var" and decl_type_b != None):
+            #error: max 1 type -> 10
+            err = error.Error(10,stack=self.get_stack_trace())
+            err.launch()    
+        elif (decl_type_a == "var" and decl_type_b == None):
+            #error: "var" auto selecter not implemented -> 8
+            err = error.Error(8,stack=self.get_stack_trace())
+            err.launch()                    
+        elif (decl_type_a == "var" and decl_type_b != None):
+            decl_type = decl_type_b
+        elif (decl_type_a != "var" and decl_type_b == None):
+            decl_type = decl_type_a
+        del(decl_type_a,decl_type_b)
+        #save the declaration
+        self.children.append(Declaration(decl_type,match.group("DECL_ID"),self))
+    
+    def scan_module(self, match):
+        """ Called when a module is found in the source code. """
+        if match.group("MODULE_TYPE") == "module":
+            print(match.lastgroup)
+        elif match.group("MODULE_TYPE") == "fun":
+            #get the return type
+            return_type_a = match.group("RETURN_TYPE_A")
+            return_type_b = match.group("RETURN_TYPE_B")
+            return_type = None
+            if ( return_type_a != None and return_type_b != None):
+                #two return types given -> 7
+                err = error.Error(7,stack=self.get_stack_trace())
+                err.launch()
+            elif (return_type_a != None):
+                return_type = return_type_a
+            elif (return_type_b != None):
+                return_type = return_type_b
+            del(return_type_a,return_type_b)
+            #save the function and launch its own analyse
+            self.children.append(Fun(match.group("BODY"),match.group("MODULE_ID"),match.group("PARAMETERS"),return_type,self))
+        elif match.group("MODULE_TYPE") == "class": 
+            #TODO
+            pass
+        else: 
+            #not module in module -> regex_failed
+            err = error.Error(msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
+            err.launch()
 
 class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.
@@ -96,28 +146,27 @@ class Module(NObject):
             if match.lastgroup == "MISMATCH":
                 # Regex failed to match -> 1
                 # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
-                err = error.Error(1)
+                # But I'm kind : let's try to find the nearest match to give a hint to the user
+                if match.group()[0] == ':':
+                    #maybe they tried a declaration ?
+                    err = error.Error(9, stack=self.get_stack_trace())
+                else:
+                    err = error.Error(1)
                 err.launch()
             # skip those
             elif match.lastgroup not in ["SKIP", "COMMENT", "SEPARATOR"] and match.group("DISABLED") == None:
                 if self.__class__.__name__ == "Module": #in a module, there can only be other modules
-                    print(match.group("MODULE_TYPE"))
-                    if match.group("MODULE_TYPE") == "module":
-                        print(match.lastgroup)
-                    elif match.group("MODULE_TYPE") == "fun":
-                        if (match.group("RETURN_TYPE_A") != None and match.group("RETURN_TYPE_B") != None):
-                            #two return types given -> syntax error
-                            err = error.Error(msg="A function should have maximum one return type.",type="syntax_error",stack=self.get_stack_trace())
-                            err.launch()
-                        self.children.append(Fun(match.group("BODY"),match.group("MODULE_ID"),match.group("PARAMETERS"),None,self))
-                    elif match.group("MODULE_TYPE") == "class": #TODO
-                        pass
-                    else: 
-                        #not module in module -> regex_failed
-                        err = error.Error(msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
-                        err.launch()
-                else: #fun or class
-                    pass
+                    self.scan_module(match)
+                elif self.__class__.__name__ == "Fun": #in a function, there can also be instructions, branches, loops
+                    source = match.group().strip('\n').strip(';')
+                    print(source)
+                    if (match.lastgroup == "MODULE"):
+                        self.scan_module(match)
+                    elif (match.lastgroup == "DECLARATION"):                  
+                        self.scan_declaration(match)
+
+
+    
                     
 
 
@@ -130,11 +179,9 @@ class Fun(Module):
     parameters: list
 
     def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent = None):
-        NObject.__init__(self, parent)
+        Module.__init__(self, body, identifier, parent)
         self.return_type = return_type
-        self.identifier = identifier
         # process parameters
-
 
 class Class(Module):
     # TODO
@@ -156,12 +203,15 @@ class Loop(NObject):
     pass
 
 
-class Instruction(NObject):
-    """ex: "int a = 2" is an instruction of type "assignement".
-    the left part (int a) is an instruction of type "instanciation".
-    the right part (2) is also an instanciation."""
-    instruction_type: object  # maybe create an enum with the type ? Or use NObjectNature ?
-    pass
+class Declaration(NObject):
+    """ex: "int a;" """
+    def __init__(self, type, id, parent = None):
+        NObject.__init__(self,parent)
+        self.type = type
+        self.id = id
+        error.Error(6, stack=self.get_stack_trace()).launch()
+
+    
 
 
 # WORK IN PROGRESS

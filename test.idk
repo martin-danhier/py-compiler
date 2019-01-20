@@ -1,5 +1,5 @@
-fun int main(test : int) : float {
-    var michel : number;
+fun int main(test : int) {
+    int michel;
     michel = 3;
     var jean : number;
     jean = 42;

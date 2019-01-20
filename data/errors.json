@@ -1,15 +1,16 @@
 {
     "types": {
+        "regex_failed" : "Regex failed to match.",
         "generic_exception": "An unknown error occured.",
-        "regex_failed": "Regex failed to match.",
         "bad_input": "Unable to work on given input.",
         "cleaner_error": "Cleaner failed to do his work.",
-        "syntax_error": "Syntax error."
+        "syntax_error": "Syntax error.",
+        "not_implemented": "This feature is not implemented."
     },
     "number": {
         "1": {
-            "type": "regex_failed",
-            "content": "In cutter state."
+            "type": "syntax_error",
+            "content": "Unable to match."
         },
         "2": {
             "type": "bad_input",
@@ -30,6 +31,22 @@
         "6": {
             "type": "generic_exception",
             "content": "An error occured, but the exception wasn't thrown correctly. Please kill the NoKe programmer(s)."
+        },
+        "7": {
+            "type": "syntax_error",
+            "content": "A function should have maximum one return type."
+        },
+        "8": {
+            "type": "not_implemented",
+            "content": "Please specify an explicit return type."
+        },
+        "9": {
+            "type": "syntax_error",
+            "content": "Expected \"var\" keyword."
+        },
+        "10": {
+            "type": "syntax_error",
+            "content": "Only one type allowed."
         }
     }
 }
