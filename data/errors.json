@@ -1,9 +1,10 @@
 {
     "types": {
+        "generic_exception": "An unknown error occured.",
         "regex_failed": "Regex failed to match.",
         "bad_input": "Unable to work on given input.",
         "cleaner_error": "Cleaner failed to do his work.",
-        "syntax_error": "Syntax error occured."
+        "syntax_error": "Syntax error."
     },
     "number": {
         "1": {
@@ -25,6 +26,10 @@
         "5": {
             "type" : "bad_input",
             "content" : "The given file should be a .idk file."
+        },
+        "6": {
+            "type": "generic_exception",
+            "content": "An error occured, but the exception wasn't thrown correctly. Please kill the NoKe programmer(s)."
         }
     }
 }

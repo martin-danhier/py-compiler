@@ -1,5 +1,6 @@
 from enum import Enum
 import json
+from noke import error
 import regex as re
 
 #get the regex and store it (OMFG) globally to avoid recreating it many times.
@@ -61,6 +62,7 @@ class NObject:
         ----------
         parent : the NObject of which this one is the children. Leave it to None !"""
         self.parent = parent
+        self.children = []
         # process body
 
 
@@ -90,7 +92,34 @@ class Module(NObject):
         NObject.__init__(self, parent)
         self.identifier = identifier
         #Process body
-        
+        for match in re.finditer(full_regex, body):
+            if match.lastgroup == "MISMATCH":
+                # Regex failed to match -> 1
+                # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
+                err = error.Error(1)
+                err.launch()
+            # skip those
+            elif match.lastgroup not in ["SKIP", "COMMENT", "SEPARATOR"] and match.group("DISABLED") == None:
+                if self.__class__.__name__ == "Module": #in a module, there can only be other modules
+                    print(match.group("MODULE_TYPE"))
+                    if match.group("MODULE_TYPE") == "module":
+                        print(match.lastgroup)
+                    elif match.group("MODULE_TYPE") == "fun":
+                        if (match.group("RETURN_TYPE_A") != None and match.group("RETURN_TYPE_B") != None):
+                            #two return types given -> syntax error
+                            err = error.Error(msg="A function should have maximum one return type.",type="syntax_error",stack=self.get_stack_trace())
+                            err.launch()
+                        self.children.append(Fun(match.group("BODY"),match.group("MODULE_ID"),match.group("PARAMETERS"),None,self))
+                    elif match.group("MODULE_TYPE") == "class": #TODO
+                        pass
+                    else: 
+                        #not module in module -> regex_failed
+                        err = error.Error(msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
+                        err.launch()
+                else: #fun or class
+                    pass
+                    
+
 
 
 class Fun(Module):
@@ -100,9 +129,10 @@ class Fun(Module):
     return_type: str
     parameters: list
 
-    def __init__(self, nature: NObjectNature, body: str, identifier: str, parameters: str, return_type: str):
-        Module.__init__(self, nature, body, identifier)
+    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent = None):
+        NObject.__init__(self, parent)
         self.return_type = return_type
+        self.identifier = identifier
         # process parameters
 
 

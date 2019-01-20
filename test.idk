@@ -1,4 +1,4 @@
-fun main(test : int){
+fun int main(test : int) : float {
     var michel : number;
     michel = 3;
     var jean : number;

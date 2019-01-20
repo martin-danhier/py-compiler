@@ -28,9 +28,9 @@ class Cutter:
             err = error.Error(3)
             err.launch()
         
-        # Declare the entire file as a module. It will recursively parse into a tree.
+        # Declare the entire file as a module. It will recursively parse into a tree. Like a boss.
         self.main_module = nobject.Module(source,file.strip('.idk'))
-        
+        print(self.main_module)
 
         # get the regex
 
