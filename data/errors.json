@@ -47,6 +47,10 @@
         "10": {
             "type": "syntax_error",
             "content": "Only one type allowed."
+        },
+        "11" : {
+            "type": "syntax_error",
+            "content": "A function body should only countain instructions, loops, branches or modules."
         }
     }
 }

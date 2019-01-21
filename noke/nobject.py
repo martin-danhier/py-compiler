@@ -12,6 +12,7 @@ del(rules) #delete the rules dictionnary that is not needed anymore
 del(json_file)
 
 
+
 class NObjectNature(Enum):
     # Type of NObject. Problem : it is possible to declare a LOOP as a CLASS :/ kind of "dirty" method then
     FILE = 0
@@ -99,6 +100,7 @@ class NObject:
         #save the declaration
         self.children.append(Declaration(decl_type,match.group("DECL_ID"),self))
     
+
     def scan_module(self, match):
         """ Called when a module is found in the source code. """
         if match.group("MODULE_TYPE") == "module":
@@ -125,6 +127,32 @@ class NObject:
         else: 
             #not module in module -> regex_failed
             err = error.Error(msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
+            err.launch()
+    
+    def scan_fun_body(self, match):
+        """Called when parsing a function body"""
+        if (match.lastgroup == "MODULE"):
+            self.scan_module(match)
+        elif (match.lastgroup == "DECLARATION"):                  
+            self.scan_declaration(match)
+        elif (match.lastgroup == "ASSIGNEMENT"):
+            self.children.append(Assignement(match.group("ASSIGN_VAR_ID"),match.group("ASSIGN_VALUE"),match.group("ASSIGN_TYPE"),self))
+        elif (match.lastgroup == "CALL"):
+            self.children.append(Call(match.group("CALL_ID"),match.group("CALL_ARGUMENTS"), self))
+        elif (match.lastgroup == "BRANCH"):
+            self.children.append(Branch(match.group("IF_CONDITION"),match.group("IF_BODY"),match.group("ELSE_BODY"),self))
+        elif (match.lastgroup == "WHILE_LOOP"):
+            self.children.append(While(match.group("WHILE_CONDITION"),match.group("WHILE_BODY"),False,self))
+        elif (match.lastgroup == "DO_LOOP"):
+            self.children.append(While(match.group("DO_CONDITION"),match.group("DO_BODY"), True, self))
+        elif (match.lastgroup == "FOR_LOOP"):
+            self.children.append(For(match.group("FOR_ARGUMENTS"),match.group("FOR_BODY"), self))
+        elif (match.lastgroup == "RETURN"):
+            self.children.append(Return(match.group("RETURN_VALUE"),self))
+        #SWITCH TODO
+        else:
+            #Invalid instruction inside the function body -> 11
+            err = error.Error(11, stack=self.get_stack_trace())
             err.launch()
 
 class Module(NObject):
@@ -154,21 +182,12 @@ class Module(NObject):
                     err = error.Error(1)
                 err.launch()
             # skip those
-            elif match.lastgroup not in ["SKIP", "COMMENT", "SEPARATOR"] and match.group("DISABLED") == None:
+            elif match.lastgroup not in ["SKIP", "COMMENT", "SEPARATOR", "DISABLE"] and match.group("DISABLED") == None:
                 if self.__class__.__name__ == "Module": #in a module, there can only be other modules
                     self.scan_module(match)
                 elif self.__class__.__name__ == "Fun": #in a function, there can also be instructions, branches, loops
-                    source = match.group().strip('\n').strip(';')
-                    print(source)
-                    if (match.lastgroup == "MODULE"):
-                        self.scan_module(match)
-                    elif (match.lastgroup == "DECLARATION"):                  
-                        self.scan_declaration(match)
-
-
-    
-                    
-
+                    self.scan_fun_body(match)
+        print(self.children)
 
 
 class Fun(Module):
@@ -180,7 +199,10 @@ class Fun(Module):
 
     def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent = None):
         Module.__init__(self, body, identifier, parent)
-        self.return_type = return_type
+        if return_type != None:
+            self.return_type = return_type
+        else:
+            self.return_type = "void"
         # process parameters
 
 class Class(Module):
@@ -198,9 +220,20 @@ class Condition(NObject):
     else_children: []
 
 
-class Loop(NObject):
-    # to think then do
-    pass
+class While(NObject):
+    # Repeat as long as the condition is true
+    def __init__(self, loop_condition, body, do_while : bool, parent = None):
+        NObject.__init__(self,parent)
+        self.do_while = do_while
+        #process condition and body
+        
+
+class For(NObject):
+    # Ex: for (int i = 0 to 3 step 4)
+    def __init__(self, arguments, body, parent = None):
+        NObject.__init__(self, parent)
+        #process parameters
+        
 
 
 class Declaration(NObject):
@@ -209,8 +242,39 @@ class Declaration(NObject):
         NObject.__init__(self,parent)
         self.type = type
         self.id = id
-        error.Error(6, stack=self.get_stack_trace()).launch()
+        
 
+class Assignement(NObject):
+    """ex: "int a = 2" """
+    def __init__(self, id, value, type, parent = None):
+        NObject.__init__(self, parent)
+        self.id = id
+        #to be scanned
+        self.value = value
+        self.type = type
+        
+
+class Call(NObject):
+    """ex: "print("hello", 2)" """
+    def __init__(self, id, arguments, parent = None):
+        NObject.__init__(self,parent)
+        self.id = id
+        #process arguments
+        
+
+class Return(NObject):
+    """Exit point of a function."""
+    def __init__(self, return_value, parent = None):
+        NObject.__init__(self, parent)
+        #process return value
+        
+
+class Branch(NObject):
+    """if, else etc"""
+    def __init__(self, if_condition, if_body, else_body, parent = None):
+        NObject.__init__(self, parent)
+        #process condition and bodies
+        
     
 
 
