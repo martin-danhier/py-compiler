@@ -154,6 +154,84 @@ class NObject:
             #Invalid instruction inside the function body -> 11
             err = error.Error(11, stack=self.get_stack_trace())
             err.launch()
+    
+    def is_match_valid (self, match):
+        """ Checks if the given match is valid.
+
+        Parameters
+        ----------
+        match : a regex match
+
+        Returns
+        -------
+        match_is_valid : bool
+
+        Notes
+        -----
+        A match is valid if it's not a MISMATCH, a SEPARATOR, a DISABLE, a COMMENT or a SKIP.
+
+        Raises
+        ------
+        Error(1) if a MISMATCH is encountered.
+        """
+        if match.lastgroup == 'MISMATCH':
+            #error in syntax -> 1
+            error.Error(1, stack=self.get_stack_trace()).launch()
+            return False
+        elif match.lastgroup in ('SKIP', 'SEPARATOR', 'COMMENT', 'DISABLE'):
+            return False
+        else:
+            return True
+
+    def scan_id(self, source):
+        for match in re.finditer(full_regex, source):
+            if self.is_match_valid(match) and match.lastgroup in ('IDENTIFIER', 'PATH'):
+                if match.lastgroup == 'IDENTIFIER':
+                    #ELEMENTARY PARTICLE -> identifier
+                    return match.group()
+                else: #path
+                    return Path(match.group('PATH_LEFT_ID'),match.group('PATH_RIGHT_ID'), self)
+            else: #error, shouldn't be possible to have because of the regex definition. 
+                #error -> 12
+                error.Error(12, stack=self.get_stack_trace()).launch()
+
+    def scan_expression(self, source):
+        source = source.strip(' ')
+        for match in re.finditer(full_regex, source):
+            if self.is_match_valid(match):
+                if match.lastgroup == 'LOGIC_GATE':
+                    pass
+                elif match.lastgroup == 'LOGIC_NOT':
+                    pass
+                elif match.lastgroup == 'COMPARISON':
+                    pass
+                elif match.lastgroup == 'ADDITION':
+                    pass
+                elif match.lastgroup == 'MULTIPLICATION':
+                    pass
+                elif match.lastgroup == 'IDENTIFIER':
+                    pass
+                elif match.lastgroup == 'STRING_LITERAL':
+                    pass
+                elif match.lastgroup == 'CHAR_LITERAL':
+                    pass
+                elif match.lastgroup == 'INT_DEC_LITERAL':
+                    pass
+                elif match.lastgroup == 'INT_HEX_LITERAL':
+                    pass
+                elif match.lastgroup == 'INT_BIN_LITERAL':
+                    pass
+                elif match.lastgroup == 'BOOL_LITERAL':
+                    pass
+                elif match.lastgroup == 'FLOAT_LITERAL':
+                    pass
+                elif match.lastgroup == 'CALL':
+                    pass
+                else:
+                    error.Error(1,stack=self.get_stack_trace()).launch()
+        return "42 for now"
+            
+
 
 class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.
@@ -179,10 +257,10 @@ class Module(NObject):
                     #maybe they tried a declaration ?
                     err = error.Error(9, stack=self.get_stack_trace())
                 else:
-                    err = error.Error(1)
+                    err = error.Error(1, stack=self.get_stack_trace())
                 err.launch()
             # skip those
-            elif match.lastgroup not in ["SKIP", "COMMENT", "SEPARATOR", "DISABLE"] and match.group("DISABLED") == None:
+            elif match.lastgroup not in ("SKIP", "COMMENT", "SEPARATOR", "DISABLE") and match.group("DISABLED") == None:
                 if self.__class__.__name__ == "Module": #in a module, there can only be other modules
                     self.scan_module(match)
                 elif self.__class__.__name__ == "Fun": #in a function, there can also be instructions, branches, loops
@@ -240,19 +318,26 @@ class Declaration(NObject):
     """ex: "int a;" """
     def __init__(self, type, id, parent = None):
         NObject.__init__(self,parent)
-        self.type = type
+        # scan type
+        self.type = self.scan_id(type)
+        # scan id, it can only be an identifier (regex)
         self.id = id
+
         
 
 class Assignement(NObject):
     """ex: "int a = 2" """
     def __init__(self, id, value, type, parent = None):
         NObject.__init__(self, parent)
-        self.id = id
-        #to be scanned
-        self.value = value
-        self.type = type
-        
+        self.id = self.scan_id(id)
+        # type included <=> Declaration
+        if type != None:
+            self.type = self.scan_id(type)
+        else:
+            self.type = self.scan_expression(value)
+        # scan value        
+
+
 
 class Call(NObject):
     """ex: "print("hello", 2)" """
@@ -275,6 +360,14 @@ class Branch(NObject):
         NObject.__init__(self, parent)
         #process condition and bodies
         
+class Path(NObject):
+    """Ex: "Person.Name" """
+    def __init__(self, left_term, right_term, parent = None):
+        NObject.__init__(self, parent)
+        #Process right term
+        self.right_term = right_term
+        #Process left term
+        self.left_term = self.scan_id(left_term)
     
 
 

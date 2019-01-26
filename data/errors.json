@@ -51,6 +51,10 @@
         "11" : {
             "type": "syntax_error",
             "content": "A function body should only countain instructions, loops, branches or modules."
+        },
+        "12" : {
+            "type": "syntax_error",
+            "content": "Expected path or identifier."
         }
     }
 }
