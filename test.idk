@@ -1,14 +1,15 @@
 fun int main(test : int) #hey
 {
-    int michel
-    michel = 3
-    if (michel == 2 or michel > 0x42FA)
-        print(michel);
+    Pedro.Michel42.Number.bool michel
+    michel = true or ( michel > 1 );
+    
+    michel = 4.2f + 2f + 0.5f;
     var jean : bool
-    jean = nope
-    michel = "michel" * jean
-    mouais(michel, jean)
-    return 2
+    jean = nope;
+    stop(pedro.papa , 42 * 3 / 2)
+    mouais()
+    return michel + 42
+    
 }
 #teshsfsefes
 disable{

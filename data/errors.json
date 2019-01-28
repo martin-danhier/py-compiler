@@ -52,9 +52,41 @@
             "type": "syntax_error",
             "content": "A function body should only countain instructions, loops, branches or modules."
         },
-        "12" :{
+        "12" : {
+            "type": "syntax_error",
+            "content": "Expected path or identifier."
+        },
+        "13" : {
+            "type": "syntax_error",
+            "content": "A term cannot be empty."
+        },
+        "14" :{
             "type" : "not_implemented",
             "content": "Please disable it using a disabled keyword or a disable block."
+        },
+        "15" :{
+            "type" : "syntax_error",
+            "content" : "Expected ',' but found ';'."
+        },
+        "16" :{
+            "type" : "syntax_error",
+            "content" : "Missing separator."
+        },
+        "17" :{
+            "type" : "syntax_error",
+            "content" : "An expression cannot be empty."
+        },
+        "18" : {
+            "type" : "syntax_error",
+            "content" : "A return must be in a function."
+        },
+        "19" : {
+            "type" : "syntax_error",
+            "content" : "A module mustn't have any return type."
+        },
+        "20" : {
+            "type" : "syntax_error",
+            "content" : "A module musn't have any parameter."
         }
     }
 }
