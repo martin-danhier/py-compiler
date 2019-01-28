@@ -1,34 +1,15 @@
+import regex as re
 from enum import Enum
 import json
 from noke import error
-import regex as re
 
-#get the regex and store it (OMFG) globally to avoid recreating it many times.
+
+# get the regex and store it (OMFG) globally to avoid recreating it many times.
 with open('data/grammar_rules.json', 'r') as json_file:
     rules = json.load(json_file)
 full_regex = "|".join("(?P<%s>%s)" % (rule, rules[rule]) for rule in rules)
-
-del(rules) #delete the rules dictionnary that is not needed anymore
+del(rules)  # delete the rules dictionnary that is not needed anymore
 del(json_file)
-
-
-
-class NObjectNature(Enum):
-    # Type of NObject. Problem : it is possible to declare a LOOP as a CLASS :/ kind of "dirty" method then
-    FILE = 0
-    MODULE = 1
-    FUN = 2
-    CLASS = 3
-    CONDITION = 4
-    LOOP = 5
-    WHILE_LOOP = 6
-    FOR_LOOP = 7
-    INSTRUCTION = 8
-    IMPORT = 9
-    ASSIGNEMENT = 10
-    CALL = 11
-    OPERATION = 12
-    INSTANCIATION = 13
 
 
 class NObjectRun(Enum):
@@ -36,28 +17,30 @@ class NObjectRun(Enum):
     ASS = 1  # Compile to binary
     VM = 2  # Compile it to VMed
 
+
 class NObjectPosition:
     """ Represents the position of a NObject in the source code. Used for debugging and error localisation."""
-    file : str
-    start_line : int
-    start_column : int
-    end_column : int
-    end_line : int
+    file: str
+    start_line: int
+    start_column: int
+    end_column: int
+    end_line: int
 
-    def __init__(self, file : str, start_line : int, start_column : int, end_line : int, end_column : int):
+    def __init__(self, file: str, start_line: int, start_column: int, end_line: int, end_column: int):
         self.file = file
         self.start_line = start_line
         self.start_column = start_column
         self.end_line = end_line
         self.end_column = end_column
 
+
 class NObject:
     """ The base class. Should never be directly instanciated, instantiate one of its children instead."""
-    parent : object
-    children : list
+    parent: object
+    children: list
     #position : object
 
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         """ Create a NObject. 
         Parameters
         ----------
@@ -66,96 +49,104 @@ class NObject:
         self.children = []
         # process body
 
-
     def get_stack_trace(self):
         """ Get a stacktrace from this NObject. 
         Returns
         -------
         stack_trace : a str that countains many infos to find this NObject again in the code"""
 
-        stack_trace = '\tin File: "%s" in %s. Details TODO\n' % ('test.idk', self.__class__.__name__)
+        stack_trace = '\tin File: "%s" in %s. Details TODO\n' % (
+            'test.idk', self.__class__.__name__)
         if self.parent != None:
             stack_trace += self.parent.get_stack_trace()
         return stack_trace
-    
+
     def scan_declaration(self, match):
         """ Called when a declaration is found in the source code. """
-        #get the type
+        # get the type
         decl_type = ""
         decl_type_a = match.group("DECL_TYPE_A")
         decl_type_b = match.group("DECL_TYPE_B")
         if (decl_type_a != "var" and decl_type_b != None):
-            #error: max 1 type -> 10
-            err = error.Error(10,stack=self.get_stack_trace())
-            err.launch()    
+            # error: max 1 type -> 10
+            err = error.Error(10, stack=self.get_stack_trace())
+            err.launch()
         elif (decl_type_a == "var" and decl_type_b == None):
-            #error: "var" auto selecter not implemented -> 8
-            err = error.Error(8,stack=self.get_stack_trace())
-            err.launch()                    
+            # error: "var" auto selecter not implemented -> 8
+            err = error.Error(8, stack=self.get_stack_trace())
+            err.launch()
         elif (decl_type_a == "var" and decl_type_b != None):
             decl_type = decl_type_b
         elif (decl_type_a != "var" and decl_type_b == None):
             decl_type = decl_type_a
-        del(decl_type_a,decl_type_b)
-        #save the declaration
-        self.children.append(Declaration(decl_type,match.group("DECL_ID"),self))
-    
+        del(decl_type_a, decl_type_b)
+        # save the declaration
+        self.children.append(Declaration(
+            decl_type, match.group("DECL_ID"), self))
 
     def scan_module(self, match):
         """ Called when a module is found in the source code. """
         if match.group("MODULE_TYPE") == "module":
             print(match.lastgroup)
         elif match.group("MODULE_TYPE") == "fun":
-            #get the return type
+            # get the return type
             return_type_a = match.group("RETURN_TYPE_A")
             return_type_b = match.group("RETURN_TYPE_B")
             return_type = None
-            if ( return_type_a != None and return_type_b != None):
-                #two return types given -> 7
-                err = error.Error(7,stack=self.get_stack_trace())
+            if (return_type_a != None and return_type_b != None):
+                # two return types given -> 7
+                err = error.Error(7, stack=self.get_stack_trace())
                 err.launch()
             elif (return_type_a != None):
                 return_type = return_type_a
             elif (return_type_b != None):
                 return_type = return_type_b
-            del(return_type_a,return_type_b)
-            #save the function and launch its own analyse
-            self.children.append(Fun(match.group("BODY"),match.group("MODULE_ID"),match.group("PARAMETERS"),return_type,self))
-        elif match.group("MODULE_TYPE") == "class": 
-            #TODO
+            del(return_type_a, return_type_b)
+            # save the function and launch its own analyse
+            self.children.append(Fun(match.group("BODY"), match.group(
+                "MODULE_ID"), match.group("PARAMETERS"), return_type, self))
+        elif match.group("MODULE_TYPE") == "class":
+            # TODO
             pass
-        else: 
-            #not module in module -> regex_failed
-            err = error.Error(msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
+        else:
+            # not module in module -> regex_failed
+            err = error.Error(
+                msg="Regex failed to match. Expected MODULE, but found %s." % match.lastgroup)
             err.launch()
-    
+
     def scan_fun_body(self, match):
         """Called when parsing a function body"""
         if (match.lastgroup == "MODULE"):
             self.scan_module(match)
-        elif (match.lastgroup == "DECLARATION"):                  
+        elif (match.lastgroup == "DECLARATION"):
             self.scan_declaration(match)
         elif (match.lastgroup == "ASSIGNEMENT"):
-            self.children.append(Assignement(match.group("ASSIGN_VAR_ID"),match.group("ASSIGN_VALUE"),match.group("ASSIGN_TYPE"),self))
+            self.children.append(Assignement(match.group("ASSIGN_VAR_ID"), match.group(
+                "ASSIGN_VALUE"), match.group("ASSIGN_TYPE"), self))
         elif (match.lastgroup == "CALL"):
-            self.children.append(Call(match.group("CALL_ID"),match.group("CALL_ARGUMENTS"), self))
+            self.children.append(
+                Call(match.group("CALL_ID"), match.group("CALL_ARGUMENTS"), self))
         elif (match.lastgroup == "BRANCH"):
-            self.children.append(Branch(match.group("IF_CONDITION"),match.group("IF_BODY"),match.group("ELSE_BODY"),self))
+            self.children.append(Branch(match.group("IF_CONDITION"), match.group(
+                "IF_BODY"), match.group("ELSE_BODY"), self))
         elif (match.lastgroup == "WHILE_LOOP"):
-            self.children.append(While(match.group("WHILE_CONDITION"),match.group("WHILE_BODY"),False,self))
+            self.children.append(
+                While(match.group("WHILE_CONDITION"), match.group("WHILE_BODY"), False, self))
         elif (match.lastgroup == "DO_LOOP"):
-            self.children.append(While(match.group("DO_CONDITION"),match.group("DO_BODY"), True, self))
+            self.children.append(
+                While(match.group("DO_CONDITION"), match.group("DO_BODY"), True, self))
         elif (match.lastgroup == "FOR_LOOP"):
-            self.children.append(For(match.group("FOR_ARGUMENTS"),match.group("FOR_BODY"), self))
+            self.children.append(
+                For(match.group("FOR_ARGUMENTS"), match.group("FOR_BODY"), self))
         elif (match.lastgroup == "RETURN"):
-            self.children.append(Return(match.group("RETURN_VALUE"),self))
-        #SWITCH TODO
+            self.children.append(Return(match.group("RETURN_VALUE"), self))
+        # SWITCH TODO
         else:
-            #Invalid instruction inside the function body -> 11
+            # Invalid instruction inside the function body -> 11
             err = error.Error(11, stack=self.get_stack_trace())
             err.launch()
-    
-    def is_match_valid (self, match):
+
+    def is_match_valid(self, match):
         """ Checks if the given match is valid.
 
         Parameters
@@ -175,7 +166,7 @@ class NObject:
         Error(1) if a MISMATCH is encountered.
         """
         if match.lastgroup == 'MISMATCH':
-            #error in syntax -> 1
+            # error in syntax -> 1
             error.Error(1, stack=self.get_stack_trace()).launch()
             return False
         elif match.lastgroup in ('SKIP', 'SEPARATOR', 'COMMENT', 'DISABLE'):
@@ -187,50 +178,63 @@ class NObject:
         for match in re.finditer(full_regex, source):
             if self.is_match_valid(match) and match.lastgroup in ('IDENTIFIER', 'PATH'):
                 if match.lastgroup == 'IDENTIFIER':
-                    #ELEMENTARY PARTICLE -> identifier
-                    return match.group()
-                else: #path
-                    return Path(match.group('PATH_LEFT_ID'),match.group('PATH_RIGHT_ID'), self)
-            else: #error, shouldn't be possible to have because of the regex definition. 
-                #error -> 12
+                    # ELEMENTARY PARTICLE -> identifier
+                    return Identifier(match.group(), self)
+                else:  # path
+                    return Path(match.group('PATH_LEFT_ID'), match.group('PATH_RIGHT_ID'), self)
+            else:  # error, shouldn't be possible to have because of the regex definition.
+                # error -> 12
                 error.Error(12, stack=self.get_stack_trace()).launch()
 
+    def simplify_term(self, term):
+        term = term.strip(' ')
+        if len(term) > 1:
+            while len(term) > 1 and term[0] == '(' and term[-1] == ')':
+                term = term[1:-1].strip(' ')
+        if len(term) == 0:
+            # error -> there is no term -> 13
+            error.Error(13, stack=self.get_stack_trace()).launch()
+        return term
+
     def scan_expression(self, source):
-        source = source.strip(' ')
+        source = self.simplify_term(source)
         for match in re.finditer(full_regex, source):
             if self.is_match_valid(match):
                 if match.lastgroup == 'LOGIC_GATE':
-                    pass
+                    return Comparison(match.group('LOG_LEFT_TERM'), match.group('COMP_OPERATOR'), match.group('LOG_RIGHT_TERM'), self)
                 elif match.lastgroup == 'LOGIC_NOT':
-                    pass
+                    return Comparison(match.group('NOT_TERM'), 'not', None, self)
                 elif match.lastgroup == 'COMPARISON':
-                    pass
+                    return Comparison(match.group('COMP_LEFT_TERM'), match.group('COMPARATOR'), match.group('COMP_RIGHT_TERM'), self)
                 elif match.lastgroup == 'ADDITION':
-                    pass
+                    return Operation(match.group('ADD_LEFT_TERM'), match.group('ADD_OPERATOR'), match.group('ADD_RIGHT_TERM'), self)
                 elif match.lastgroup == 'MULTIPLICATION':
-                    pass
+                    return Operation(match.group('MU_LEFT_TERM'), match.group('MU_OPERATOR'), match.group('MU_RIGHT_TERM'), self)
                 elif match.lastgroup == 'IDENTIFIER':
-                    pass
+                    return Identifier(match.group(), self)
                 elif match.lastgroup == 'STRING_LITERAL':
-                    pass
+                    return Constant('string', match.group().strip('"'), self)
                 elif match.lastgroup == 'CHAR_LITERAL':
-                    pass
-                elif match.lastgroup == 'INT_DEC_LITERAL':
-                    pass
-                elif match.lastgroup == 'INT_HEX_LITERAL':
-                    pass
-                elif match.lastgroup == 'INT_BIN_LITERAL':
-                    pass
+                    return Constant('char', match.group().strip('\''), self)
+                elif match.lastgroup in ('INT_DEC_LITERAL', 'INT_HEX_LITERAL', 'INT_DEC_LITERAL'):
+                    return Constant('int', int(match.group()), self)
                 elif match.lastgroup == 'BOOL_LITERAL':
-                    pass
+                    value = match.group()
+                    if value in ('true', 'yep'):
+                        value = True
+                    else:
+                        value = False
+                    return Constant('bool', value, self)
                 elif match.lastgroup == 'FLOAT_LITERAL':
-                    pass
+                    return Constant('float', float(match.group().strip('f')), self)
                 elif match.lastgroup == 'CALL':
-                    pass
+                    return Call(match.group('CALL_ID'), match.group('CALL_ARGUMENTS'), self)
+                elif match.lastgroup == 'PATH':
+                    return Path(match.group('PATH_LEFT_ID'), match.group('PATH_RIGHT_ID'), self)
                 else:
-                    error.Error(1,stack=self.get_stack_trace()).launch()
-        return "42 for now"
-            
+                    error.Error(1, stack=self.get_stack_trace()).launch()
+        # if this is executed, then it didn't found any match. The expression is then invalid.
+        error.Error(1, stack=self.get_stack_trace()).launch()
 
 
 class Module(NObject):
@@ -238,7 +242,7 @@ class Module(NObject):
     => init must check that children are exclusively modules"""
     identifier: str  # the name of the module
 
-    def __init__(self, body: str, identifier: str, parent = None):
+    def __init__(self, body: str, identifier: str, parent=None):
         """ Instanciates a module. A module is a set of other modules, like funs or classes.
         Parameters
         ----------
@@ -247,23 +251,23 @@ class Module(NObject):
         parent: the NObject of which this one is the children. Leave it to None !"""
         NObject.__init__(self, parent)
         self.identifier = identifier
-        #Process body
+        # Process body
         for match in re.finditer(full_regex, body):
             if match.lastgroup == "MISMATCH":
                 # Regex failed to match -> 1
                 # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
                 # But I'm kind : let's try to find the nearest match to give a hint to the user
                 if match.group()[0] == ':':
-                    #maybe they tried a declaration ?
+                    # maybe they tried a declaration ?
                     err = error.Error(9, stack=self.get_stack_trace())
                 else:
                     err = error.Error(1, stack=self.get_stack_trace())
                 err.launch()
             # skip those
             elif match.lastgroup not in ("SKIP", "COMMENT", "SEPARATOR", "DISABLE") and match.group("DISABLED") == None:
-                if self.__class__.__name__ == "Module": #in a module, there can only be other modules
+                if self.__class__.__name__ == "Module":  # in a module, there can only be other modules
                     self.scan_module(match)
-                elif self.__class__.__name__ == "Fun": #in a function, there can also be instructions, branches, loops
+                elif self.__class__.__name__ == "Fun":  # in a function, there can also be instructions, branches, loops
                     self.scan_fun_body(match)
         print(self.children)
 
@@ -275,7 +279,7 @@ class Fun(Module):
     return_type: str
     parameters: list
 
-    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent = None):
+    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent=None):
         Module.__init__(self, body, identifier, parent)
         if return_type != None:
             self.return_type = return_type
@@ -283,51 +287,42 @@ class Fun(Module):
             self.return_type = "void"
         # process parameters
 
+
 class Class(Module):
     # TODO
     pass
 
 
-class Condition(NObject):
-    """ ex:"if (x > 2) { thing } else {}" is a Conditional instruction
-        it has the particulary to have 2 children : if and else (else ifs are just ifs in the else of another if)
-        if there is no else statement, else_condition and else_children are None and are skipped when the condition is false
-       """
-    condition: list  # to revise
-    else_condition: list  # to revise too
-    else_children: []
-
-
 class While(NObject):
     # Repeat as long as the condition is true
-    def __init__(self, loop_condition, body, do_while : bool, parent = None):
-        NObject.__init__(self,parent)
+    def __init__(self, loop_condition, body, do_while: bool, parent=None):
+        NObject.__init__(self, parent)
         self.do_while = do_while
-        #process condition and body
-        
+        # process condition and body
+
 
 class For(NObject):
     # Ex: for (int i = 0 to 3 step 4)
-    def __init__(self, arguments, body, parent = None):
+    def __init__(self, arguments, body, parent=None):
         NObject.__init__(self, parent)
-        #process parameters
-        
+        # process parameters
 
 
 class Declaration(NObject):
     """ex: "int a;" """
-    def __init__(self, type, id, parent = None):
-        NObject.__init__(self,parent)
+
+    def __init__(self, type, id, parent=None):
+        NObject.__init__(self, parent)
         # scan type
         self.type = self.scan_id(type)
         # scan id, it can only be an identifier (regex)
         self.id = id
 
-        
 
 class Assignement(NObject):
     """ex: "int a = 2" """
-    def __init__(self, id, value, type, parent = None):
+
+    def __init__(self, id, value, type, parent=None):
         NObject.__init__(self, parent)
         self.id = self.scan_id(id)
         # type included <=> Declaration
@@ -335,42 +330,87 @@ class Assignement(NObject):
             self.type = self.scan_id(type)
         else:
             self.type = self.scan_expression(value)
-        # scan value        
-
+        # scan value
 
 
 class Call(NObject):
     """ex: "print("hello", 2)" """
-    def __init__(self, id, arguments, parent = None):
-        NObject.__init__(self,parent)
-        self.id = id
-        #process arguments
-        
+
+    def __init__(self, id, arguments, parent=None):
+        NObject.__init__(self, parent)
+        self.id = self.scan_id(id)
+
+        self.arguments = []
+        if arguments != None:
+            if ';' in arguments:
+                error.Error(1).launch()
+            # process arguments
+            for match in re.finditer(full_regex,arguments):
+                if self.is_match_valid(match) and match.lastgroup != 'PARAM_SEPARATOR':
+                    self.arguments.append(self.scan_expression(match.group()))
+
 
 class Return(NObject):
     """Exit point of a function."""
-    def __init__(self, return_value, parent = None):
+
+    def __init__(self, return_value, parent=None):
         NObject.__init__(self, parent)
-        #process return value
-        
+        # process return value
+
 
 class Branch(NObject):
     """if, else etc"""
-    def __init__(self, if_condition, if_body, else_body, parent = None):
+
+    def __init__(self, if_condition, if_body, else_body, parent=None):
         NObject.__init__(self, parent)
-        #process condition and bodies
-        
+        # process condition and bodies
+
+
 class Path(NObject):
     """Ex: "Person.Name" """
-    def __init__(self, left_term, right_term, parent = None):
+
+    def __init__(self, left_term, right_term, parent=None):
         NObject.__init__(self, parent)
-        #Process right term
+        # Process right term
         self.right_term = right_term
-        #Process left term
+        # Process left term
         self.left_term = self.scan_id(left_term)
-    
 
 
+class Comparison(NObject):
+    def __init__(self, left_term, operator, right_term, parent=None):
+        NObject.__init__(self, parent)
+        self.left_term = self.scan_expression(self.simplify_term(left_term))
+        if right_term != None:
+            self.right_term = self.scan_expression(
+                self.simplify_term(right_term))
+        elif operator != 'not':
+            # empty term -> 13
+            error.Error(13, stack=self.get_stack_trace()).launch()
+        self.operator = operator
+
+
+class Operation(Comparison):
+    def __init__(self, left_term, operator, right_term, parent=None):
+        # Math operation behaves exactly like a logical operation, but
+        # I made two classes in order to be able to know which one it is
+        Comparison.__init__(self, left_term, operator, right_term, parent)
+
+
+###### ELEMENTARY PARTICLES ######
+# These are indivisible NObjects, and stop the recursion.
+
+class Constant(NObject):
+    def __init__(self, type, value, parent=None):
+        NObject.__init__(self, parent)
+        self.type = type
+        self.value = value
+
+
+class Identifier(NObject):
+    def __init__(self, id, parent):
+        NObject.__init__(self, parent)
+        self.id = id
 # WORK IN PROGRESS
 
 

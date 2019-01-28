@@ -55,6 +55,10 @@
         "12" : {
             "type": "syntax_error",
             "content": "Expected path or identifier."
+        },
+        "13" : {
+            "type": "syntax_error",
+            "content": "A term cannot be empty."
         }
     }
 }
