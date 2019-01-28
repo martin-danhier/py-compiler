@@ -87,6 +87,10 @@
         "20" : {
             "type" : "syntax_error",
             "content" : "A module musn't have any parameter."
+        },
+        "21" : {
+            "type" : "syntax_error",
+            "content" : "The \"start\" statement of a \"for\" loop must be an ASSIGNEMENT."
         }
     }
 }

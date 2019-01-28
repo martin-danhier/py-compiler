@@ -54,10 +54,10 @@ class Cutter:
             # Create a NoKeObj with this text and add it to the list
            # self.noked_objects.append(nobject.NObject(obj))
 
-    def run(self):
+    #def run(self):
         # Simply run the program, find the 'main NoKeObject and run it
-        not_found = True
-        i = 0
+        #not_found = True
+        #i = 0
         # Loop through discovered obj
         #while not_found and i != len(self.noked_objects):
         #    if self.noked_objects[i].name == 'main' and self.noked_objects[i].type == nobject.NObjectNature.FUN:

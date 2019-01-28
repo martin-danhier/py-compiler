@@ -1,14 +1,8 @@
 fun int main(test : int) #hey
 {
-    Pedro.Michel42.Number.bool michel
-    michel = true or ( michel > 1 );
-    
-    michel = 4.2f + 2f + 0.5f;
-    var jean : bool
-    jean = nope;
-    stop(pedro.papa , 42 * 3 / 2)
-    mouais()
-    return michel + 42
+    bool loop = nope
+    for (int michel.bob = 0 while i == 45 step 2)
+        print("shutdown");
     
 }
 #teshsfsefes
