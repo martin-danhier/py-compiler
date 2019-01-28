@@ -16,36 +16,66 @@ class NObjectRun(Enum):
     ASS = 1  # Compile to binary
     VM = 2  # Compile it to VMed
 
+def get_string_info(string):
+    """ Calculate the number of lines in a string. """
+    line_count = 1
+    column_count = 1
+    for char in string:
+        if char == '\n':
+            column_count = 1
+            line_count += 1
+        else:
+            column_count += 1
+    return Coords(line_count, column_count, len(string))
+
+class Coords:
+    def __init__(self, line : int, column : int, char_counter):
+        self.line = line
+        self.column = column
+        self.char_counter = char_counter
+    
+    def __repr__(self):
+        return '(Ln %s, Col %s)' % (self.line, self.column)
 
 class NObjectPosition:
     """ Represents the position of a NObject in the source code. Used for debugging and error localisation."""
-    file: str
-    start_line: int
-    start_column: int
-    end_column: int
-    end_line: int
 
-    def __init__(self, file: str, start_line: int, start_column: int, end_line: int, end_column: int):
+    def __repr__(self):
+        return 'Object in %s, at %s.' % (self.file, self.start)
+
+    def __init__(self, file: str, start):
         self.file = file
-        self.start_line = start_line
-        self.start_column = start_column
-        self.end_line = end_line
-        self.end_column = end_column
-
+        self.start = start
 
 class NObject:
     """ The base class. Should never be directly instanciated, instantiate one of its children instead."""
     parent: object
     #position : object
 
-    def __init__(self, parent=None):
+    def __init__(self, raw = "", position = 0, parent=None):
         """ Create a NObject. 
         Parameters
         ----------
         parent : the NObject of which this one is the children. Leave it to None !"""
         self.parent = parent
         self.children = []
-        # process body
+        self.raw = raw
+
+        if parent != None:
+            self.position = NObjectPosition(self.parent.position.file, self.parent.position.start + position)
+
+            print(self.get_coords_from_position(self.position.start))
+            absolute_position = 0
+
+        
+
+    def get_root(self):
+        obj = self
+        while(True):
+            if obj.parent == None:
+                return obj
+            else:
+                obj = obj.parent
 
     def get_stack_trace(self):
         """ Get a stacktrace from this NObject. 
@@ -58,6 +88,24 @@ class NObject:
         if self.parent != None:
             stack_trace += self.parent.get_stack_trace()
         return stack_trace
+
+    def get_coords_from_position(self, position):
+        line_counter = 1
+        column_counter = 1
+        string = self.get_root().raw
+        i = 0
+        j = position
+        while j > 0:
+            if string[i] == '\n':
+                line_counter += 1
+                column_counter = 1
+            else:
+                column_counter += 1
+            i += 1
+            j -= 1
+        return Coords(line_counter, column_counter, position)
+
+
 
     def scan_declaration(self, match):
         """ Called when a declaration is found in the source code. """
@@ -84,7 +132,7 @@ class NObject:
         del(decl_type_a, decl_type_b)
         # save the declaration
         return Declaration(
-            decl_type, match.group("DECL_ID"), self)
+            decl_type, match.group("DECL_ID"), match.group(), match.start(), self)
 
     def scan_module(self, match):
         """ Called when a module is found in the source code. """
@@ -98,7 +146,7 @@ class NObject:
             if match.group("PARAMETERS") != None:
                 # A module has no parameters -> 20
                 error.Error(20, stack=self.get_stack_trace()).launch()
-            return Module(match.group('BODY'), match.group('MODULE_ID'), self)
+            return Module(match.group('BODY'), match.group('MODULE_ID'), match.group(), match.start(), self)
         elif match.group("MODULE_TYPE") == "fun":
             # get the return type
             return_type = None
@@ -113,7 +161,7 @@ class NObject:
             del(return_type_a, return_type_b)
             # save the function and launch its own analyse
             return Fun(match.group("BODY"), match.group(
-                "MODULE_ID"), self.simplify_term(match.group("PARAMETERS"), False), return_type, self)
+                "MODULE_ID"), self.simplify_term(match.group("PARAMETERS"), False), return_type, match.group(), match.start(), self)
         elif match.group("MODULE_TYPE") == "class":
             # not implemented -> 12
             error.Error(12, stack=self.get_stack_trace()).launch()
@@ -135,22 +183,22 @@ class NObject:
             return self.scan_declaration(match)
         elif (match.lastgroup == "ASSIGNEMENT"):
             return Assignement(match.group("ASSIGN_VAR_ID"), match.group(
-                "ASSIGN_VALUE"), match.group("ASSIGN_TYPE"), self)
+                "ASSIGN_VALUE"), match.group("ASSIGN_TYPE"), match.group(), match.start(), self)
         elif (match.lastgroup == "CALL"):
-            return Call(match.group("CALL_ID"), match.group("CALL_ARGUMENTS"), self)
+            return Call(match.group("CALL_ID"), match.group("CALL_ARGUMENTS"), match.group(), match.start(), self)
         elif (match.lastgroup == "BRANCH"):
             return Branch(match.group("IF_CONDITION"), match.group(
-                "IF_BODY"), match.group("ELSE_BODY"), self)
+                "IF_BODY"), match.group("ELSE_BODY"), match.group(), match.start(), self)
         elif (match.lastgroup == "WHILE_LOOP"):
             return While(match.group("WHILE_CONDITION"),
-                         match.group("WHILE_BODY"), False, self)
+                         match.group("WHILE_BODY"), False, match.group(), match.start(), self)
         elif (match.lastgroup == "DO_LOOP"):
             return While(match.group("DO_CONDITION"),
-                         match.group("DO_BODY"), True, self)
+                         match.group("DO_BODY"), True, match.group(), match.start(), self)
         elif (match.lastgroup == "FOR_LOOP"):
-            return For(match.group("FOR_BODY"), match.group('FOR_START'), match.group('FOR_END'), match.group('FOR_END_KW'), match.group('FOR_STEP'), self)
+            return For(match.group("FOR_BODY"), match.group('FOR_START'), match.group('FOR_END'), match.group('FOR_END_KW'), match.group('FOR_STEP'), match.group(), match.start(), self)
         elif (match.lastgroup == "RETURN"):
-            return Return(match.group("RETURN_VALUE"), self)
+            return Return(match.group("RETURN_VALUE"), match.group(), match.start(), self)
         # SWITCH TODO
         else:
             # Invalid instruction inside the function body -> 11
@@ -190,9 +238,9 @@ class NObject:
             if self.is_match_valid(match) and match.lastgroup in ('IDENTIFIER', 'PATH'):
                 if match.lastgroup == 'IDENTIFIER':
                     # ELEMENTARY PARTICLE -> identifier
-                    return Identifier(match.group(), self)
+                    return Identifier(match.group(), match.start(), self)
                 else:  # path
-                    return Path(match.group('PATH_LEFT_ID'), match.group('PATH_RIGHT_ID'), self)
+                    return Path(match.group('PATH_LEFT_ID'), match.group('PATH_RIGHT_ID'), match.group(), match.start(), self)
             else:  # error, shouldn't be possible to have because of the regex definition.
                 # error -> 12
                 error.Error(12, stack=self.get_stack_trace()).launch()
@@ -219,45 +267,45 @@ class NObject:
                     error.Error(16, stack=self.get_stack_trace()).launch()
                 elif match.lastgroup == 'LOGIC_GATE':
                     value = Comparison(match.group('LOG_LEFT_TERM'), match.group(
-                        'COMP_OPERATOR'), match.group('LOG_RIGHT_TERM'), self)
+                        'COMP_OPERATOR'), match.group('LOG_RIGHT_TERM'), match.group(), match.start(), self)
                 elif match.lastgroup == 'LOGIC_NOT':
                     value = Comparison(match.group(
-                        'NOT_TERM'), 'not', None, self)
+                        'NOT_TERM'), 'not', None, match.group(), match.start(), self)
                 elif match.lastgroup == 'COMPARISON':
                     value = Comparison(match.group('COMP_LEFT_TERM'), match.group(
-                        'COMPARATOR'), match.group('COMP_RIGHT_TERM'), self)
+                        'COMPARATOR'), match.group('COMP_RIGHT_TERM'), match.group(), match.start(), self)
                 elif match.lastgroup == 'ADDITION':
                     value = Operation(match.group('ADD_LEFT_TERM'), match.group(
-                        'ADD_OPERATOR'), match.group('ADD_RIGHT_TERM'), self)
+                        'ADD_OPERATOR'), match.group('ADD_RIGHT_TERM'), match.group(), match.start(), self)
                 elif match.lastgroup == 'MULTIPLICATION':
                     value = Operation(match.group('MU_LEFT_TERM'), match.group(
-                        'MU_OPERATOR'), match.group('MU_RIGHT_TERM'), self)
+                        'MU_OPERATOR'), match.group('MU_RIGHT_TERM'), match.group(), match.start(), self)
                 elif match.lastgroup == 'IDENTIFIER':
-                    value = Identifier(match.group(), self)
+                    value = Identifier(match.group(), match.start(), self)
                 elif match.lastgroup == 'STRING_LITERAL':
-                    value = Constant('string', match.group().strip('"'), self)
+                    value = Constant('string', match.group().strip('"'), match.group(), match.start(), self)
                 elif match.lastgroup == 'CHAR_LITERAL':
-                    value = Constant('char', match.group().strip('\''), self)
+                    value = Constant('char', match.group().strip('\''), match.group(), match.start(), self)
                 elif match.lastgroup in ('INT_DEC_LITERAL', 'INT_HEX_LITERAL', 'INT_DEC_LITERAL'):
-                    value = Constant('int', int(match.group()), self)
+                    value = Constant('int', int(match.group()), match.group(), match.start(), self)
                 elif match.lastgroup == 'BOOL_LITERAL':
                     value = match.group()
                     if value in ('true', 'yep'):
                         value = True
                     else:
                         value = False
-                    value = Constant('bool', value, self)
+                    value = Constant('bool', value, match.group(), match.start(), self)
                 elif match.lastgroup == 'FLOAT_LITERAL':
                     value = Constant('float', float(
-                        match.group().strip('f')), self)
+                        match.group().strip('f')), match.group(), match.start(), self)
                 elif match.lastgroup == 'CALL':
                     value = Call(match.group('CALL_ID'),
-                                 match.group('CALL_ARGUMENTS'), self)
+                                 match.group('CALL_ARGUMENTS'), match.group(), match.start(), self)
                 elif match.lastgroup == 'PATH':
                     value = Path(match.group('PATH_LEFT_ID'),
-                                 match.group('PATH_RIGHT_ID'), self)
+                                 match.group('PATH_RIGHT_ID'), match.group(), match.start(), self)
                 elif match.lastgroup == 'DOUBLE_LITERAL':
-                    value = Constant('double', float(match.group()), self)
+                    value = Constant('double', float(match.group()), match.group(), match.start(), self)
                 else:
                     error.Error(1, stack=self.get_stack_trace()).launch()
         if value == None:
@@ -269,17 +317,25 @@ class NObject:
 class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.
     => init must check that children are exclusively modules"""
-    identifier: str  # the name of the module
 
-    def __init__(self, body: str, identifier: str, parent=None):
+
+    def __init__(self, body: str, identifier: str, raw = "", position = 0, parent=None):
         """ Instanciates a module. A module is a set of other modules, like funs or classes.
         Parameters
         ----------
         body: the code inside the module's brackets (not included) (str)
         identifier: the "name" of the module. Should respect naming conventions. (str)
         parent: the NObject of which this one is the children. Leave it to None !"""
-        NObject.__init__(self, parent)
-        self.identifier = identifier
+        NObject.__init__(self, raw, position, parent)
+        if (self.parent == None): #root object, like a file
+            self.raw = body
+            self.position = NObjectPosition(identifier + '.idk', 0)
+        
+
+
+
+
+        self.identifier = Identifier(identifier, self)
         self.children = []
         # Process body
         for match in re.finditer(full_regex, body):
@@ -298,8 +354,6 @@ class Module(NObject):
                     # not implemented -> 12
                     error.Error(12, stack=self.get_stack_trace()).launch()
 
-        print(self.children)
-
 
 class Fun(Module):
     """A function is... a function.
@@ -308,8 +362,8 @@ class Fun(Module):
     return_type: str
     parameters: list
 
-    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, parent=None):
-        Module.__init__(self, body, identifier, parent)
+    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, raw = "", position = 0, parent=None):
+        Module.__init__(self, body, identifier, raw, position, parent)
         if return_type != None:
             self.return_type = return_type
         else:
@@ -324,8 +378,8 @@ class Class(Module):
 
 class While(NObject):
     # Repeat as long as the condition is true
-    def __init__(self, loop_condition, body, do_while: bool, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, loop_condition, body, do_while: bool, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.do_while = do_while
         self.loop_condition = self.scan_expression(loop_condition)
         self.children = []
@@ -335,8 +389,8 @@ class While(NObject):
 
 class For(NObject):
     # Ex: for (int i = 0 to 3 step 4)
-    def __init__(self, body, start, end, end_type, step = '1' , parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, body, start, end, end_type, step = '1' , raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         #process body
         self.children = []
         for match in re.finditer(full_regex, body):
@@ -346,26 +400,27 @@ class For(NObject):
         for match in re.finditer (full_regex, start):
             if self.is_match_valid(match):
                 if match.lastgroup == 'ASSIGNEMENT':
-                    self.start = Assignement(match.group('ASSIGN_VAR_ID'),match.group('ASSIGN_VALUE'),match.group('ASSIGN_TYPE'),self)
+                    self.start = Assignement(match.group('ASSIGN_VAR_ID'),match.group('ASSIGN_VALUE'),match.group('ASSIGN_TYPE'), match.group(), match.start(), self)
                 else:
                     # not an assignement -> 21
                     error.Error(21, stack=self.get_stack_trace()).launch()
         #process end 
         if end_type == 'to':
-            self.condition = Comparison(str(self.start.id), '<', end, self)
+            self.condition = Comparison(str(self.start.id), '<', end, end, 0, self)
         else:
             self.condition = self.scan_expression(end)
         #process step
         if (step == None):
             step = '1'
         self.step = self.scan_expression(step)
+        
 
 
 class Declaration(NObject):
     """ex: "int a;" """
 
-    def __init__(self, type, id, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, type, id, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         # scan type
         self.type = self.scan_id(type)
         # scan id, it can only be an identifier (regex)
@@ -381,8 +436,8 @@ class Assignement(NObject):
             return '%s %s = %s' % (self.type, self.id, self.value)
 
 
-    def __init__(self, id, value, type, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, id, value, type, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.id = self.scan_id(id)
         # type included <=> Declaration
         if type != None:
@@ -396,8 +451,8 @@ class Assignement(NObject):
 class Call(NObject):
     """ex: "print("hello", 2)" """
 
-    def __init__(self, id, arguments, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, id, arguments, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.id = self.scan_id(id)
 
         self.arguments = []
@@ -413,16 +468,16 @@ class Call(NObject):
 class Return(NObject):
     """Exit point of a function."""
 
-    def __init__(self, return_value, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, return_value, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.return_value = self.scan_expression(return_value)
 
 
 class Branch(NObject):
     """if, else etc"""
 
-    def __init__(self, if_condition, if_body, else_body, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, if_condition, if_body, else_body, raw = "" , position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         # process condition. A non-boolean value will be true if different from null.
         self.if_condition = self.scan_expression(if_condition)
         # process if_body
@@ -443,8 +498,8 @@ class Path(NObject):
     def __repr__(self):
         return '%s.%s' % (self.left_term, self.right_term)
 
-    def __init__(self, left_term, right_term, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, left_term, right_term, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         # Process right term
         self.right_term = Identifier(right_term, self)
         # Process left term
@@ -458,8 +513,8 @@ class Comparison(NObject):
         else:
             return '%s %s %s' % (self.left_term, self.operator, self.right_term)
 
-    def __init__(self, left_term, operator, right_term, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, left_term, operator, right_term, raw="", position = 0,  parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.left_term = self.scan_expression(self.simplify_term(left_term))
         if right_term != None:
             self.right_term = self.scan_expression(
@@ -471,10 +526,10 @@ class Comparison(NObject):
 
 
 class Operation(Comparison):
-    def __init__(self, left_term, operator, right_term, parent=None):
-        # Math operation behaves exactly like a logical operation, but
+    def __init__(self, left_term, operator, right_term, raw = "",position = 0,  parent=None):
+        # Math operations behave exactly like a logical operation, but
         # I made two classes in order to be able to know which one it is
-        Comparison.__init__(self, left_term, operator, right_term, parent)
+        Comparison.__init__(self, left_term, operator, right_term,raw, position, parent)
 
 
 ###### ELEMENTARY PARTICLES ######
@@ -490,8 +545,8 @@ class Constant(NObject):
         else:
             return str(self.value)
 
-    def __init__(self, type, value, parent=None):
-        NObject.__init__(self, parent)
+    def __init__(self, type, value, raw = "", position = 0, parent=None):
+        NObject.__init__(self, raw, position, parent)
         self.type = type
         self.value = value
 
@@ -500,8 +555,8 @@ class Identifier(NObject):
     def __repr__(self):
         return self.id
 
-    def __init__(self, id, parent):
-        NObject.__init__(self, parent)
+    def __init__(self, id, position = 0, parent = None):
+        NObject.__init__(self, id, position, parent)
         self.id = id
 # WORK IN PROGRESS
 
