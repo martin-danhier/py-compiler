@@ -4,17 +4,19 @@ fun int main(test : int) #hey
     michel = 3
     if (michel == 2 or michel > 0x42FA)
         print(michel);
-    disable #michel
-    {
     var jean : bool
     jean = nope
     michel = "michel" * jean
-    }
     mouais(michel, jean)
     return 2
 }
 #teshsfsefes
-
+disable{
 disabled fun main23(){
     hello()
 }
+
+disabled class Test
+{
+    int michel2 = 0;
+}}

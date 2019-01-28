@@ -51,6 +51,10 @@
         "11" : {
             "type": "syntax_error",
             "content": "A function body should only countain instructions, loops, branches or modules."
+        },
+        "12" :{
+            "type" : "not_implemented",
+            "content": "Please disable it using a disabled keyword or a disable block."
         }
     }
 }

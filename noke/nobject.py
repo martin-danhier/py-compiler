@@ -121,7 +121,9 @@ class NObject:
             del(return_type_a,return_type_b)
             #save the function and launch its own analyse
             self.children.append(Fun(match.group("BODY"),match.group("MODULE_ID"),match.group("PARAMETERS"),return_type,self))
-        elif match.group("MODULE_TYPE") == "class": 
+        elif match.group("MODULE_TYPE") == "class":
+            #not implemented -> 12
+            error.Error(12, stack=self.get_stack_trace()).launch()
             #TODO
             pass
         else: 
@@ -187,7 +189,9 @@ class Module(NObject):
                     self.scan_module(match)
                 elif self.__class__.__name__ == "Fun": #in a function, there can also be instructions, branches, loops
                     self.scan_fun_body(match)
-        print(self.children)
+                elif self.__class__.__name__ == "Class": #class TODO
+                    #not implemented -> 12
+                    error.Error(12, stack=self.get_stack_trace()).launch()
 
 
 class Fun(Module):
@@ -240,6 +244,9 @@ class Declaration(NObject):
     """ex: "int a;" """
     def __init__(self, type, id, parent = None):
         NObject.__init__(self,parent)
+        #process data
+        for match in re.finditer(full_regex, type):
+            if (match.lastgroup not in [COMMENT])
         self.type = type
         self.id = id
         
