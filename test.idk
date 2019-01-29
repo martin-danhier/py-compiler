@@ -1,18 +1,10 @@
-disable{
-
-
-
-    #test
-}
-
 
 
 
 fun int main(test : int) #hey
 {
-    bool loop = nope
-    for (int bob = 2 while i == 45 step 2) #test
-        print("shutdown");
+    #comment
+    int test;
      
     
 }

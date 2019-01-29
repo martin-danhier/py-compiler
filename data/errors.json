@@ -5,7 +5,8 @@
         "bad_input": "Unable to work on given input.",
         "cleaner_error": "Cleaner failed to do his work.",
         "syntax_error": "Syntax error.",
-        "not_implemented": "This feature is not implemented."
+        "not_implemented": "This feature is not implemented.",
+        "compiler_internal": "Compiler internal error."
     },
     "number": {
         "1": {
@@ -91,6 +92,14 @@
         "21" : {
             "type" : "syntax_error",
             "content" : "The \"start\" statement of a \"for\" loop must be an ASSIGNEMENT."
+        },
+        "22" : {
+            "type" : "compiler_internal",
+            "content" : "Root constructor is used internally. Please use the internal constructor \"Module(match, parent)\"."
+        },
+        "23" : {
+            "type" : "compiler_internal",
+            "content" : "Internal constructor is used externally. Please use the root constructor \"Module((file_content, file_name))\"."
         }
     }
 }

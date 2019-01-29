@@ -15,10 +15,7 @@ class Cutter:
     def __init__(self, file: str):
         # get the text from the file
         source = ""
-        if not file[-4:] == '.idk':
-            #File is not of the correct file format -> 5
-            err = error.Error(5)
-            err.launch()
+        
         try:
             # Open and read the file
             with open(file, 'r') as source_file :
@@ -30,7 +27,7 @@ class Cutter:
         
         
         # Declare the entire file as a module. It will recursively parse into a tree. Like a boss.
-        self.main_module = nobject.Module(source,file.strip('.idk'))
+        self.main_module = nobject.Module((source, file))
         #print(self.main_module)
 
         # get the regex

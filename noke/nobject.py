@@ -1,6 +1,6 @@
 import regex as re
-from enum import Enum
 import json
+from enum import Enum
 from noke import error
 
 
@@ -60,11 +60,12 @@ class NObject:
         self.parent = parent
         self.children = []
         self.raw = raw
-
+        print("NObject instanciated. Type : %s" % self.__class__.__name__)
         if parent != None:
             self.position = NObjectPosition(self.parent.position.file, self.parent.position.start + position)
 
             print(self.get_coords_from_position(self.position.start))
+            print(self.position.start)
             absolute_position = 0
 
         
@@ -105,63 +106,29 @@ class NObject:
             j -= 1
         return Coords(line_counter, column_counter, position)
 
+    def scan_module(self, match, parent_scan_position = 0):
+        """ Called when a module is found in the source code. 
 
+        Parameters
+        ----------
+        match : a regex match of a module. (Match)
+        parent_scan_position : the position of the string scanned in the parent. (int) Ex:
+            module test { #body }
+            If a module is found in the body, parent_scan_position would be its position
+            in the module. """
 
-    def scan_declaration(self, match):
-        """ Called when a declaration is found in the source code. """
-        # get the type
-        decl_type = ""
-        decl_type_a = match.group("DECL_TYPE_A")
-        decl_type_b = match.group("DECL_TYPE_B")
-        if (decl_type_a not in ['var', None] and decl_type_b != None):
-            # error: max 1 type -> 10
-            err = error.Error(10, stack=self.get_stack_trace())
-            err.launch()
-        elif (decl_type_a == "var" and decl_type_b == None):
-            # error: "var" auto selecter not implemented -> 8
-            err = error.Error(8, stack=self.get_stack_trace())
-            err.launch()
-        elif (decl_type_a == None and decl_type_b != None):
-            #Expected var keyword -> 9
-            err = error.Error(9, stack=self.get_stack_trace())
-            err.launch()
-        elif (decl_type_a == "var" and decl_type_b != None):
-            decl_type = decl_type_b
-        elif (decl_type_a != "var" and decl_type_b == None):
-            decl_type = decl_type_a
-        del(decl_type_a, decl_type_b)
-        # save the declaration
-        return Declaration(
-            decl_type, match.group("DECL_ID"), match.group(), match.start(), self)
-
-    def scan_module(self, match):
-        """ Called when a module is found in the source code. """
-        return_type_a = match.group("RETURN_TYPE_A")
-        return_type_b = match.group("RETURN_TYPE_B")
-
-        if match.group("MODULE_TYPE") == "module":
-            if (return_type_a != None or return_type_b != None):
+        if match.group('MODULE_TYPE') == 'module':
+            if match.group('RETURN_TYPE_A') != None or match.group('RETURN_TYPE_B') != None:
                 # A module has no return type -> 19
                 error.Error(19, stack=self.get_stack_trace()).launch()
-            if match.group("PARAMETERS") != None:
+            if match.group('PARAMETERS') != None:
                 # A module has no parameters -> 20
                 error.Error(20, stack=self.get_stack_trace()).launch()
-            return Module(match.group('BODY'), match.group('MODULE_ID'), match.group(), match.start(), self)
-        elif match.group("MODULE_TYPE") == "fun":
-            # get the return type
-            return_type = None
-            if (return_type_a != None and return_type_b != None):
-                # two return types given -> 7
-                err = error.Error(7, stack=self.get_stack_trace())
-                err.launch()
-            elif (return_type_a != None):
-                return_type = return_type_a
-            elif (return_type_b != None):
-                return_type = return_type_b
-            del(return_type_a, return_type_b)
+            return Module(match, self, parent_scan_position)
+        elif match.group('MODULE_TYPE') == 'fun':
+            
             # save the function and launch its own analyse
-            return Fun(match.group("BODY"), match.group(
-                "MODULE_ID"), self.simplify_term(match.group("PARAMETERS"), False), return_type, match.group(), match.start(), self)
+            return Fun(match, self, parent_scan_position)
         elif match.group("MODULE_TYPE") == "class":
             # not implemented -> 12
             error.Error(12, stack=self.get_stack_trace()).launch()
@@ -175,12 +142,12 @@ class NObject:
 
     
 
-    def scan_fun_body(self, match):
+    def scan_fun_body(self, match, parent_scan_position):
         """Called when parsing a function body"""
         if (match.lastgroup == "MODULE"):
-            return self.scan_module(match)
+            return self.scan_module(match, parent_scan_position)
         elif (match.lastgroup == "DECLARATION"):
-            return self.scan_declaration(match)
+            return Declaration(match, self, parent_scan_position)
         elif (match.lastgroup == "ASSIGNEMENT"):
             return Assignement(match.group("ASSIGN_VAR_ID"), match.group(
                 "ASSIGN_VALUE"), match.group("ASSIGN_TYPE"), match.group(), match.start(), self)
@@ -233,14 +200,14 @@ class NObject:
         else:
             return True
 
-    def scan_id(self, source):
+    def scan_id(self, source, parent_scan_position):
         for match in re.finditer(full_regex, source):
             if self.is_match_valid(match) and match.lastgroup in ('IDENTIFIER', 'PATH'):
                 if match.lastgroup == 'IDENTIFIER':
                     # ELEMENTARY PARTICLE -> identifier
-                    return Identifier(match.group(), match.start(), self)
+                    return Identifier(match.group(), match.start() + parent_scan_position, self)
                 else:  # path
-                    return Path(match.group('PATH_LEFT_ID'), match.group('PATH_RIGHT_ID'), match.group(), match.start(), self)
+                    return Path(match, self, parent_scan_position)
             else:  # error, shouldn't be possible to have because of the regex definition.
                 # error -> 12
                 error.Error(12, stack=self.get_stack_trace()).launch()
@@ -318,41 +285,94 @@ class Module(NObject):
     """ A module is a set of other modules, like fun or Classes.
     => init must check that children are exclusively modules"""
 
+    ########## NOTE ##########
+    # Because of python joy, we cannot split the constructor into two different implementations.
+    # In a normal language, you are supposed to split the constructor. Read the comments for details.
 
-    def __init__(self, body: str, identifier: str, raw = "", position = 0, parent=None):
-        """ Instanciates a module. A module is a set of other modules, like funs or classes.
-        Parameters
-        ----------
-        body: the code inside the module's brackets (not included) (str)
-        identifier: the "name" of the module. Should respect naming conventions. (str)
-        parent: the NObject of which this one is the children. Leave it to None !"""
-        NObject.__init__(self, raw, position, parent)
-        if (self.parent == None): #root object, like a file
-            self.raw = body
-            self.position = NObjectPosition(identifier + '.idk', 0)
-        
+    def __init__(self, args, parent=None, scan_pos_in_parent = 0):
+        """ Instanciates and recursively parse a module.
 
+            Parameters
+            ----------
+            args: two possibilities
+                A) A tuple that contains (body (str), identifier (str)) => ROOT FILE
+                B) A regex Match (Match) => INTERNAL
+            parent: The NObject  of which this one is a child. => INTERNAL
+            scan_pos_in_parent: position of the scan in the parent (ex: pos of the body in the module). (int) => INTERNAL
 
+            Notes
+            -----
+            To instanciate a file, use the format : Module((source_str, file_nam_)).
+        """
+        if isinstance(args, tuple):
+            ########## NOTE ##########
+            # constructor 1 : ROOT CONSTRUCTOR
+            # Note to the translator:
+            # <=> Module(string body, string identifier)
+            # As there is no "parent" parameter, no need to check if it's null.
+            NObject.__init__(self, parent=parent)
+            if parent == None: #root object, like a file
+                if len(args[1]) < 5:
+                    #File name is too short or invalid -> 5
+                    error.Error(5).launch()
+                elif args[1][-4:] != '.idk':
+                    #File is not of the correct file format -> 5
+                    error.Error(5).launch()
+                self.position = NObjectPosition(args[1], 0)
+                self.identifier = Identifier(args[1][:-4], 0, self)
+                self.raw = args[0]
+                # Process body
+                for match in re.finditer(full_regex, args[0]):
+                    if match.lastgroup == 'MISMATCH':
+                        # Regex failed to match -> 1
+                        # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
+                        error.Error(1, stack=self.get_stack_trace()).launch()
+                    # skip those
+                    elif match.lastgroup not in ('SKIP', 'COMMENT', 'SEPARATOR', 'DISABLE') and match.group('DISABLED') == None:
+                        if self.__class__.__name__ == 'Module':  # in a module, there can only be other modules
+                            self.children.append(self.scan_module(match, 0))
+                        elif self.__class__.__name__ == 'Fun':  # in a function, there can also be instructions, branches, loops
+                            self.children.append(self.scan_fun_body(match, 0))
+                        elif self.__class__.__name__ == 'Class':  # class TODO
+                            # not implemented -> 12
+                            error.Error(12, stack=self.get_stack_trace()).launch()
 
-
-        self.identifier = Identifier(identifier, self)
-        self.children = []
-        # Process body
-        for match in re.finditer(full_regex, body):
-            if match.lastgroup == "MISMATCH":
-                # Regex failed to match -> 1
-                # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
-                err = error.Error(1, stack=self.get_stack_trace())
-                err.launch()
-            # skip those
-            elif match.lastgroup not in ("SKIP", "COMMENT", "SEPARATOR", "DISABLE") and match.group("DISABLED") == None:
-                if self.__class__.__name__ == "Module":  # in a module, there can only be other modules
-                    self.children.append(self.scan_module(match))
-                elif self.__class__.__name__ == "Fun":  # in a function, there can also be instructions, branches, loops
-                    self.children.append(self.scan_fun_body(match))
-                elif self.__class__.__name__ == "Class":  # class TODO
-                    # not implemented -> 12
-                    error.Error(12, stack=self.get_stack_trace()).launch()
+                
+            else:
+                #root file constructor used internally -> NoKe Programming Error
+                # -> 22
+                error.Error(22, stack= self.get_stack_trace()).launch()
+            
+        else:
+            ########## NOTE ##########
+            # constructor 2 : INTERNAL CONSTRUCTOR
+            # Note to the translator:
+            # <=> Module(Match match, NObject parent, int scan_pos_in_parent = 0)
+            # Maybe rename all the "match" below in "submatch" and all the "args" below in "match"
+            # => Can be a protected constructor, as it is only used internally.
+            # As it is an internal constructor, parent MUST be a NObject and non-null.
+            if parent == None:
+                # internal constructor used externally -> 23
+                error.Error(23).launch()
+            else:
+                NObject.__init__(self, args.group(), args.start() + scan_pos_in_parent, parent)
+                self.identifier = Identifier(args.group('MODULE_ID'), args.start('MODULE_ID') + scan_pos_in_parent, self)
+                self.children = []
+                # Process body
+                for match in re.finditer(full_regex, args.group('BODY')):
+                    if match.lastgroup == 'MISMATCH':
+                        # Regex failed to match -> 1
+                        # <=> SOMEBODY WROTE SHIT INTO THE CODE FILE ITS NOT MY PROBLEM JERRY
+                        error.Error(1, stack=self.get_stack_trace()).launch()
+                    # skip those
+                    elif match.lastgroup not in ('SKIP', 'COMMENT', 'SEPARATOR', 'DISABLE') and match.group('DISABLED') == None:
+                        if self.__class__.__name__ == 'Module':  # in a module, there can only be other modules
+                            self.children.append(self.scan_module(match, args.start('BODY')))
+                        elif self.__class__.__name__ == 'Fun':  # in a function, there can also be instructions, branches, loops
+                            self.children.append(self.scan_fun_body(match, args.start('BODY')))
+                        elif self.__class__.__name__ == 'Class':  # class TODO
+                            # not implemented -> 12
+                            error.Error(12, stack=self.get_stack_trace()).launch()
 
 
 class Fun(Module):
@@ -362,13 +382,27 @@ class Fun(Module):
     return_type: str
     parameters: list
 
-    def __init__(self, body: str, identifier: str, parameters: str, return_type: str, raw = "", position = 0, parent=None):
-        Module.__init__(self, body, identifier, raw, position, parent)
-        if return_type != None:
-            self.return_type = return_type
-        else:
-            self.return_type = "void"
-        # process parameters
+    def __init__(self, match, parent, scan_pos_in_parent):
+        """ INTERNAL CONSTRUCTOR """
+        Module.__init__(self, match, parent, scan_pos_in_parent)
+
+#        # get the return type
+#        return_type = None
+#
+#        return_type_a = match.group('RETURN_TYPE_A')
+#        return_type_b = match.group('RETURN_TYPE_B')
+#        if (return_type_a != None and return_type_b != None):
+#            # two return types given -> 7
+#            err = error.Error(7, stack=self.get_stack_trace())
+#            err.launch()
+#        elif (return_type_a != None):
+#            self.return_type = self.scan_id(return_type_a, match.start('RETURN_TYPE_A'))
+#        elif (return_type_b != None):
+#            self.return_type = self.scan_id(return_type_b, match.start('RETURN_TYPE_B'))
+#        else:
+#            self.return_type = "void"
+#        # process parameters
+
 
 
 class Class(Module):
@@ -419,12 +453,32 @@ class For(NObject):
 class Declaration(NObject):
     """ex: "int a;" """
 
-    def __init__(self, type, id, raw = "", position = 0, parent=None):
-        NObject.__init__(self, raw, position, parent)
-        # scan type
-        self.type = self.scan_id(type)
+    def __init__(self, match, parent, parent_scan_position):
+        NObject.__init__(self, match.group(), match.start() + parent_scan_position, parent)
+
+        # get the type
+        decl_type_a = match.group("DECL_TYPE_A")
+        decl_type_b = match.group("DECL_TYPE_B")
+        if (decl_type_a not in ['var', None] and decl_type_b != None):
+            # error: max 1 type -> 10
+            err = error.Error(10, stack=self.get_stack_trace())
+            err.launch()
+        elif (decl_type_a == "var" and decl_type_b == None):
+            # error: "var" auto selecter not implemented -> 8
+            err = error.Error(8, stack=self.get_stack_trace())
+            err.launch()
+        elif (decl_type_a == None and decl_type_b != None):
+            #Expected var keyword -> 9
+            err = error.Error(9, stack=self.get_stack_trace())
+            err.launch()
+        elif (decl_type_a == "var" and decl_type_b != None):
+            self.type = self.scan_id(decl_type_b, match.start('DECL_TYPE_B'))
+        elif (decl_type_a != "var" and decl_type_b == None):
+            self.type = self.scan_id(decl_type_a, match.start('DECL_TYPE_A'))
+        del(decl_type_a, decl_type_b)
+
         # scan id, it can only be an identifier (regex)
-        self.id = id
+        self.id = Identifier(match.group('DECL_ID'), match.start('DECL_ID'),self)
 
 
 class Assignement(NObject):
@@ -498,12 +552,12 @@ class Path(NObject):
     def __repr__(self):
         return '%s.%s' % (self.left_term, self.right_term)
 
-    def __init__(self, left_term, right_term, raw = "", position = 0, parent=None):
-        NObject.__init__(self, raw, position, parent)
+    def __init__(self, match, parent, parent_scan_position):
+        NObject.__init__(self, match.group(), match.start() + parent_scan_position, parent)
         # Process right term
-        self.right_term = Identifier(right_term, self)
+        self.right_term = Identifier(match.group('PATH_RIGHT_TERM'), match.start('PATH_RIGHT_TERM') ,self)
         # Process left term
-        self.left_term = self.scan_id(left_term)
+        self.left_term = self.scan_id(match.group('PATH_LEFT_TERM'), match.start('PATH_LEFT_TERM'))
 
 
 class Comparison(NObject):
