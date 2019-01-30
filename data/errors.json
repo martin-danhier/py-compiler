@@ -35,7 +35,7 @@
         },
         "7": {
             "type": "syntax_error",
-            "content": "A function should have maximum one return type."
+            "content": "A function must have maximum one return type."
         },
         "8": {
             "type": "not_implemented",
@@ -87,7 +87,7 @@
         },
         "20" : {
             "type" : "syntax_error",
-            "content" : "A module musn't have any parameter."
+            "content" : "A module mustn't have any parameter."
         },
         "21" : {
             "type" : "syntax_error",
@@ -100,6 +100,14 @@
         "23" : {
             "type" : "compiler_internal",
             "content" : "Internal constructor is used externally. Please use the root constructor \"Module((file_content, file_name))\"."
+        },
+        "24": {
+            "type" : "syntax_error",
+            "content" : "Missing closing quotation mark or escape character."
+        },
+        "25":{
+            "type" : "syntax_error",
+            "content" : "A function parameters must be a DECLARATION or an ASSIGNEMENT."
         }
     }
 }
