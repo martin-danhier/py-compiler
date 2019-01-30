@@ -21,8 +21,8 @@ class NObjectRun(Enum):
 class NObjectPosition:
     """ Represents the position of a NObject in the source code. Used for debugging and error localisation."""
 
-    def __repr__(self):
-        return 'Object in %s, at %s.' % (self.file, self.start)
+    #def __repr__(self):
+    #    return 'Object in %s, at %s.' % (self.file, self.start)
 
     def __init__(self, file: str, start):
         self.file = file
@@ -39,10 +39,26 @@ class NObject:
         ----------
         parent : the NObject of which this one is the children. Leave it to None !"""
         self.parent = parent
-        self.children = []
         if parent != None:
             self.position = NObjectPosition(self.parent.position.file, position)
 
+    def convert_to_dict(self):
+        """Converts the NObject to a dictionnary json-able"""
+        attr_dict = self.__dict__
+        dict = {}
+        dict['class_name'] = self.__class__.__name__
+        for attr in attr_dict:
+            if attr != 'parent':
+                
+                if isinstance(attr_dict[attr], NObject) or isinstance(attr_dict[attr], Identifier):
+                    dict[attr] = attr_dict[attr].convert_to_dict()
+                elif attr == 'position':
+                    dict['start'] = attr_dict[attr].start
+                elif isinstance(attr_dict[attr], list):
+                    dict[attr] = [elem.convert_to_dict() for elem in attr_dict[attr]]
+                else:
+                    dict[attr] = attr_dict[attr]
+        return dict
         
 
     def get_root(self):
@@ -295,6 +311,7 @@ class Module(NObject):
                 self.position = NObjectPosition(args[1], 0)
                 self.identifier = Identifier(args[1][:-4], 0, self)
                 # Process body
+                self.children = []
                 for match in re.finditer(full_regex, args[0]):
                     if match.lastgroup == 'MISMATCH':
                         # Regex failed to match -> 1
@@ -369,7 +386,7 @@ class Fun(Module):
         elif (return_type_b != None):
             self.return_type = self.scan_id(return_type_b, match.start('RETURN_TYPE_B'))
         else:
-            self.return_type = 'void' #that or identifier with "void" inside
+            self.return_type = Identifier('void', parent_scan_position, self) #that or identifier with "void" inside
         # process parameters
         # maybe remake some of this to check if every rule is followed
         self.parameters = []
@@ -609,7 +626,7 @@ class Constant(NObject):
 
 class Identifier(NObject):
     def __repr__(self):
-        return self.id
+       return self.id
 
     def __init__(self, id, position = 0, parent = None):
         NObject.__init__(self, position, parent)

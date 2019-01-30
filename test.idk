@@ -1,11 +1,12 @@
-
-
-
-fun int main(int a, int b) #hey
+fun main()
 {
-    for (int i = 0 to 10 step 2){
-        Display.Text("pop")
+    display("Hello world ! ");
+    for (int i = 0 to 42)
+    {   
+        if(i % 2 == 0)
+            display("Number" + i);
+        else
+            display("Impair");
     }
-     
-    
+
 }

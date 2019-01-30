@@ -22,12 +22,13 @@ class Cutter:
                 source = source_file.read()
         except:
             # Unable to open file -> 3
-            err = error.Error(3)
-            err.launch()
+            error.ThrowError(3)
         
         
         # Declare the entire file as a module. It will recursively parse into a tree. Like a boss.
         self.main_module = nobject.Module((source, file))
+        with open(file.strip('.idk') + '.json', 'w') as output_file:
+            json.dump(self.main_module.convert_to_dict(), output_file)
         #print(self.main_module)
 
         # get the regex
