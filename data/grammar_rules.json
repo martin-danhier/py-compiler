@@ -9,7 +9,7 @@
     "CALL": "(?P<CALL_ID>(?&IDENTIFIER)(?:\\.(?&IDENTIFIER))*)(?&SKIP)?\\((?P<CALL_ARGUMENTS>(?P<ARG>(?:(?!\\b(?:to|step|while)\\b)(?:(?&STRING_LITERAL)|(?&CHAR_LITERAL)|\\((?&ARG)\\)|[^;,()]))+)(?:,(?&ARG))*)?\\)",
     "RETURN": "return(?&SKIP)(?P<RETURN_VALUE>[^;\\n]+)",
     "ASSIGNEMENT": "(?:(?P<ASSIGN_TYPE>(?&IDENTIFIER))(?&SKIP))?(?P<ASSIGN_VAR_ID>(?&CALL_ID))(?&SKIP)?=(?!=)(?&SKIP)?(?P<ASSIGN_VALUE>(?:(?&STRING_LITERAL)|[^;\\n])+)",
-    "DECLARATION": "(?P<DECL_TYPE_A>(?&CALL_ID))?(?&SKIP)(?P<DECL_ID>(?&IDENTIFIER))(?:(?&SKIP)?:(?&SKIP)?(?P<DECL_TYPE_B>(?&CALL_ID)))?(?&SEPARATOR)",
+    "DECLARATION": "(?P<DECL_TYPE_A>(?&CALL_ID))?(?&SKIP)(?P<DECL_ID>(?&IDENTIFIER))(?:(?&SKIP)?:(?&SKIP)?(?P<DECL_TYPE_B>(?&CALL_ID)))?(?&SKIP)?(?=[;,\\n]|$)",
     "PATH": "(?P<PATH_LEFT_ID>(?&IDENTIFIER)(?:\\.(?&IDENTIFIER))*)\\.(?P<PATH_RIGHT_ID>(?&IDENTIFIER))",
     "LOGIC_GATE": "(?P<LOG_LEFT_TERM>(?:(?:(?!\\breturn\\b)(?:(?&STRING_LITERAL)|(?&CALL)|\\((?:(?&LOGIC_GATE)|(?&COMPARISON)|(?&LOGIC_NOT)|(?&LOG_LEFT_TERM))?\\)|[^;,\\n()\"])(?<!(?<![<>=!])=(?!=))))+)\\b(?P<LOG_OPERATOR>and|or|xor)\\b(?P<LOG_RIGHT_TERM>(?&LOG_LEFT_TERM))",
     "LOGIC_NOT": "\\bnot\\b(?&SKIP)?(?P<NOT_LEFT_TERM>(?:(?&STRING_LITERAL)|(?&CALL)|\\((?:(?&LOGIC_GATE)|(?&COMPARISON)|(?&LOGIC_NOT)|(?&NOT_LEFT_TERM))?\\)|[^;,\\n()\"])+)",
