@@ -38,7 +38,7 @@ Exemple : ``python ncompiler.py main.idk -i -o output.json --verbose``
 ### Completed
 - **Syntax**: Agree on a syntax for NoKe
 - **Parser** : Converts the source code into an absract syntax tree (AST).
-- **Error** : Handle exceptions, syntax errors, ...
+- **Error** : Handle exceptions, syntax errors, locate error in the source code ...
 - **Json exporter**: Exports the AST to a json file that can be interpreted by [Endiver](https://github.com/NoKe-Language/Endiver).
 - **Command line support** : support for a command line usage (such as ``ncompiler main.idk -i``)
 ### To do
