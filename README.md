@@ -23,6 +23,8 @@ The compiler is not currently functionnal, please use [Endiver](https://github.c
 - **Error** : Handle exceptions, syntax errors, ...
 - **Json exporter**: Exports the AST to a json file that can be interpreted by [Endiver](https://github.com/NoKe-Language/Endiver).
 ### To do
+- **Find a good name for the compiler** : because "compiler" is too generic ^^
+- **Command line support** : support for a command line usage (such as ``compiler main.idk -p``)
 - **Official documentation** for NoKe
 - **Semantic analysis** : Check if the source code is semantically coherent
 - **Translator** : Convert the AST into intermediate code (3AC)
