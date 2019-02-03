@@ -403,7 +403,6 @@ class Fun(Module):
         Module.__init__(self, match, parent, parent_scan_position)
 
         # get the return type
-        return_type = None
 
         return_type_a = match.group('RETURN_TYPE_A')
         return_type_b = match.group('RETURN_TYPE_B')
