@@ -418,7 +418,7 @@ class Fun(Module):
                 return_type_b, match.start('RETURN_TYPE_B'))
         else:
             # that or identifier with "void" inside
-            self.return_type = Identifier('void', parent_scan_position, self)
+            self.return_type = 'void'
         # process parameters
         # maybe remake some of this to check if every rule is followed
         self.parameters = []
@@ -540,7 +540,7 @@ class Assignement(NObject):
     """ex: "int a = 2" """
 
     def __repr__(self):
-        if type.id == 'void':
+        if type == 'void':
             return '%s = %s' % (self.id, self.value)
         else:
             return '%s %s = %s' % (self.type, self.id, self.value)
@@ -554,7 +554,7 @@ class Assignement(NObject):
             self.type = self.scan_id(match.group(
                 'ASSIGN_TYPE'), parent_scan_position + match.start('ASSIGN_TYPE'))
         else:
-            self.type = Identifier('void', parent_scan_position, self)
+            self.type = 'void'
         # scan value
         self.value = self.scan_expression(match.group(
             'ASSIGN_VALUE'), match.start('ASSIGN_VALUE') + parent_scan_position)
