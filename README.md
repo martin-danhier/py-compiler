@@ -26,6 +26,7 @@ Format : ``python ncompiler.py <source_file> [options]``
 - **options**: (optional)
     - ``--output <output_file>`` or ``-o <output_file>`` : The path to the output file (executable if compiler, json if interpreter).
     - ``--verbose`` or ``-v`` : Enable log.
+    
     One of these: (not both)
     - ``--compile`` or ``-c`` : Compile the NoKe script.
     - ``--interpret`` or ``-i`` : Convert the NoKe script to a .json file to use with [Endiver](https://github.com/NoKe-Language/Endiver). (default)
