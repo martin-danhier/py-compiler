@@ -3,7 +3,7 @@ import sys
 from termcolor import colored
 from colorama import init
 from noke import nobject, tools
-init() #allow coloring on windows
+
 
 def ThrowError(nb=-1,position=None,stack="", msg=None, type=""):
     if (nb != -1 and type != ""):
@@ -15,17 +15,14 @@ def ThrowError(nb=-1,position=None,stack="", msg=None, type=""):
     message = ""
     if (stack != ""):
         message += stack
-    coords = tools.get_coords_from_position(position.start, position.file)
-    
-    if coords.line != 0 and position.file != "":
-        with open(position.file) as target_file:
-            temp = tools.custom_strip(target_file.readlines()[coords.line - 1], " ")
+    if position != None:
+        coords = tools.get_coords_from_position(position.start, position.file)
+        if coords.line != 0 and position.file != "":
+            with open(position.file) as target_file:
+                temp = tools.custom_strip(target_file.readlines()[coords.line - 1], " ")
 
-        
-
-
-        message += 'In File "%s" on line %d, column %d:\n-> %s' % (position.file, coords.line, coords.column, temp[0])
-        message += "  " + (coords.column - temp[1]) * " " + "^\n"
+            message += 'In File "%s" on line %d, column %d:\n-> %s' % (position.file, coords.line, coords.column, temp[0])
+            message += "  " + (coords.column - temp[1]) * " " + "^\n"
     #add the error info
     with open("data/errors.json") as json_file:
         error_list = json.load(json_file)

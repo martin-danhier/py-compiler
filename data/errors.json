@@ -1,6 +1,6 @@
 {
     "types": {
-        "regex_failed" : "Regex failed to match.",
+        "regex_failed": "Regex failed to match.",
         "generic_exception": "An unknown error occured.",
         "bad_input": "Unable to work on given input.",
         "cleaner_error": "Cleaner failed to do his work.",
@@ -22,12 +22,12 @@
             "content": "Unable to open file."
         },
         "4": {
-            "type" : "syntax_error",
-            "content" : "Syntax error while trying to compile source code."
+            "type": "syntax_error",
+            "content": "Syntax error while trying to compile source code."
         },
         "5": {
-            "type" : "bad_input",
-            "content" : "The given file should be a .idk file."
+            "type": "bad_input",
+            "content": "The given path should be the path to a .idk file."
         },
         "6": {
             "type": "generic_exception",
@@ -49,65 +49,69 @@
             "type": "syntax_error",
             "content": "Only one type allowed."
         },
-        "11" : {
+        "11": {
             "type": "syntax_error",
             "content": "A function body should only countain instructions, loops, branches or modules."
         },
-        "12" : {
+        "12": {
             "type": "syntax_error",
             "content": "Expected path or identifier."
         },
-        "13" : {
+        "13": {
             "type": "syntax_error",
             "content": "A term cannot be empty."
         },
-        "14" :{
-            "type" : "not_implemented",
+        "14": {
+            "type": "not_implemented",
             "content": "Please disable it using a disabled keyword or a disable block."
         },
-        "15" :{
-            "type" : "syntax_error",
-            "content" : "Expected ',' but found ';'."
+        "15": {
+            "type": "syntax_error",
+            "content": "Expected ',' but found ';'."
         },
-        "16" :{
-            "type" : "syntax_error",
-            "content" : "Missing separator."
+        "16": {
+            "type": "syntax_error",
+            "content": "Missing separator."
         },
-        "17" :{
-            "type" : "syntax_error",
-            "content" : "An expression cannot be empty."
+        "17": {
+            "type": "syntax_error",
+            "content": "An expression cannot be empty."
         },
-        "18" : {
-            "type" : "syntax_error",
-            "content" : "A return must be in a function."
+        "18": {
+            "type": "syntax_error",
+            "content": "A return must be in a function."
         },
-        "19" : {
-            "type" : "syntax_error",
-            "content" : "A module mustn't have any return type."
+        "19": {
+            "type": "syntax_error",
+            "content": "A module mustn't have any return type."
         },
-        "20" : {
-            "type" : "syntax_error",
-            "content" : "A module mustn't have any parameter."
+        "20": {
+            "type": "syntax_error",
+            "content": "A module mustn't have any parameter."
         },
-        "21" : {
-            "type" : "syntax_error",
-            "content" : "The \"start\" statement of a \"for\" loop must be an ASSIGNEMENT."
+        "21": {
+            "type": "syntax_error",
+            "content": "The \"start\" statement of a \"for\" loop must be an ASSIGNEMENT."
         },
-        "22" : {
-            "type" : "compiler_internal",
-            "content" : "Root constructor is used internally. Please use the internal constructor \"Module(match, parent)\"."
+        "22": {
+            "type": "compiler_internal",
+            "content": "Root constructor is used internally. Please use the internal constructor \"Module(match, parent)\"."
         },
-        "23" : {
-            "type" : "compiler_internal",
-            "content" : "Internal constructor is used externally. Please use the root constructor \"Module((file_content, file_name))\"."
+        "23": {
+            "type": "compiler_internal",
+            "content": "Internal constructor is used externally. Please use the root constructor \"Module((file_content, file_name))\"."
         },
         "24": {
-            "type" : "syntax_error",
-            "content" : "Missing closing quotation mark or escape character."
+            "type": "syntax_error",
+            "content": "Missing closing quotation mark or escape character."
         },
-        "25":{
-            "type" : "syntax_error",
-            "content" : "A function parameters must be a DECLARATION or an ASSIGNEMENT."
+        "25": {
+            "type": "syntax_error",
+            "content": "A function parameters must be a DECLARATION or an ASSIGNEMENT."
+        },
+        "26": {
+            "type": "bad_input",
+            "content": "The given path doesn't exist."
         }
     }
 }

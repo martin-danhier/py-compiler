@@ -16,15 +16,32 @@ The compiler does not generate a json file, but goes further with the analysis. 
 
 The compiler is not currently functionnal, please use [Endiver](https://github.com/NoKe-Language/Endiver) for now.
 
+## How to use
+
+This program supports command line options and arguments.
+
+Format : ``python ncompiler.py <source_file> [options]``
+
+- **source_file**: The path to the .idk file. Currently, NoKe doesn't handle multiple files.
+- **options**: (optional)
+    - ``--output <output_file>`` or ``-o <output_file>`` : The path to the output file (executable if compiler, json if interpreter).
+    - ``--verbose`` or ``-v`` : Enable log.
+    One of these: (not both)
+    - ``--compile`` or ``-c`` : Compile the NoKe script.
+    - ``--interpret`` or ``-i`` : Convert the NoKe script to a .json file to use with [Endiver](https://github.com/NoKe-Language/Endiver). (default)
+
+Exemple : ``python ncompiler.py main.idk -i -o output.json --verbose`` 
+
+
 ## Milestones
 ### Completed
 - **Syntax**: Agree on a syntax for NoKe
 - **Parser** : Converts the source code into an absract syntax tree (AST).
 - **Error** : Handle exceptions, syntax errors, ...
 - **Json exporter**: Exports the AST to a json file that can be interpreted by [Endiver](https://github.com/NoKe-Language/Endiver).
+- **Command line support** : support for a command line usage (such as ``ncompiler main.idk -i``)
 ### To do
 - **Find a good name for the compiler** : because "compiler" is too generic ^^
-- **Command line support** : support for a command line usage (such as ``compiler main.idk -p``)
 - **Official documentation** for NoKe
 - **Semantic analysis** : Check if the source code is semantically coherent
 - **Translator** : Convert the AST into intermediate code (3AC)
