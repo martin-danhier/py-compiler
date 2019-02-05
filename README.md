@@ -26,6 +26,7 @@ Format : ``python ncompiler.py <source_file> [options]``
 - **options**: (optional)
     - ``--output <output_file>`` or ``-o <output_file>`` : The path to the output file (executable if compiler, json if interpreter).
     - ``--verbose`` or ``-v`` : Enable log.
+    - ``--override`` or ``-o`` : Always override output file.
     
     One of these: (not both)
     - ``--compile`` or ``-c`` : Compile the NoKe script.
