@@ -9,7 +9,8 @@ from colorama import init
 @click.option('--output', '-o', type=str, help='Output file. (Default <source_file>.json)')
 @click.option('--interpret/--compile', '-i/-c', help='Convert to json to use with Endiver / Compile to executable. (Default interpret)')
 @click.option('--verbose/--silent', '-v/-s' , help='Enable/Disable logs. (Default off)')
-def main(source_file, interpret, output, verbose):
+@click.option('--override/--ask', '-o/-a', help='Enable/Disable the "always override" mode. (Default off)')
+def main(source_file, interpret, output, verbose, override):
     init() #allow coloring on windows
     if os.path.isfile(source_file):
         if len(source_file) > 4 and source_file[-4:] == '.idk':
@@ -35,8 +36,7 @@ def main(source_file, interpret, output, verbose):
                     print('NoKe compiler %s: \"%s\" is not a .json file.\n\tA) Continue with this file.\n\tB) Continue with \"%s.json\" instead.\n\tC) Cancel.' % (colored('warning','yellow'), output, source_file[:-4]))
                     answered = False
                     while not answered:
-                        answer = input('Enter letter >>> ')
-                        answer = answer.strip(' ').lower()
+                        answer = input('Enter letter >>> ').strip(' ').lower()
                         if answer == 'a':
                             answered = True
                         elif answer == 'b':
@@ -49,6 +49,14 @@ def main(source_file, interpret, output, verbose):
                         else:
                             print('Invalid answer.\n')
                     print('Continuing with %s.' % output)   
+                if os.path.isfile(output) and not override:
+                    # file already exists
+                    print('NoKe compiler %s: \"%s\" already exists. Overwrite ? (y/n)' % (colored('warning','yellow'), output))
+                    answer = input().strip(' ').lower()
+                    if answer != 'y':
+                        #don't override -> stop
+                        print('\nAborted!')
+                        sys.exit(1)
                 #Export .json file
                 if verbose:
                     print('Exporting to %s...' % output)
