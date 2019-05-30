@@ -389,6 +389,13 @@ class Module(NObject):
                             # no gonna raise etc
                             error.ThrowError(
                                 14, self.position, self.get_stack_trace())
+    
+    def convert_to_mips(self):
+        stamp = "# Generated with py-compiler\n# https://github.com/NoKe-Language/py-compiler"
+        for child in self.children:
+            if isinstance(child, Fun):
+                print("Hey ! There is a function there !")
+        return stamp
 
 
 class Fun(Module):
